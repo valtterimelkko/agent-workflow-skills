@@ -1,6 +1,6 @@
 # Agent Workflow Skills
 
-A curated public collection of practical `SKILL.md`-style prompts for coding agents.
+A curated public collection of practical `SKILL.md` agent skills for coding-agent workflows.
 
 ## Project story
 
@@ -50,22 +50,22 @@ A skill qualified for this repo only if it was:
 ## Included skills
 
 ### Core workflow patterns
-- `systematic-debugging`
-- `test-driven-development`
-- `handoff`
-- `grill-me`
+- `systematic-debugging` — root-cause-first debugging discipline for bugs, test failures, and unexpected behaviour
+- `test-driven-development` — test-first implementation workflow for features and bugfixes
+- `handoff` — structured session handoff skill for continuity across agent sessions
+- `grill-me` — clarification and stress-testing skill for plans, projects, workflows, and designs
 
 ### Maintainer / documentation skills
-- `code-documenter`
-- `openapi-schema`
-- `socialmedia-optimization`
+- `code-documenter` — comprehensive project documentation generation for APIs, apps, CLIs, and libraries
+- `openapi-schema` — creation and repair of OpenAPI 3.1 schemas for API integrations and GPT-style actions
+- `socialmedia-optimization` — implementation and validation of Open Graph and social preview metadata
 
 ### Agent operations and ecosystem skills
-- `web-data-acquisition`
-- `claude-p`
-- `claude-channels`
-- `opencode-plugin`
-- `artifact-variations`
+- `web-data-acquisition` — routing layer for choosing the right scraping, crawling, or extraction approach
+- `claude-p` — operational guidance for programmatic multi-turn Claude Code CLI usage
+- `claude-channels` — guidance for building channel plugins that push events into live Claude Code sessions
+- `opencode-plugin` — development and troubleshooting guide for OpenCode plugins
+- `artifact-variations` — generate multiple visual/copy/layout variations as a browsable selection artifact
 
 ## Structure
 
