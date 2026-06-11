@@ -54,7 +54,7 @@ A skill qualified for this repo only if it was:
 - `systematic-debugging` — root-cause-first debugging discipline for bugs, test failures, and unexpected behaviour
 - `test-driven-development` — test-first implementation workflow for features and bugfixes
 - `handoff` — structured session handoff skill for continuity across agent sessions
-- `grill-me` — clarification and stress-testing skill for plans, projects, workflows, and designs
+- `grill-me` — clarification and stress-testing skill for plans, projects, workflows, and designs *(adapted/curated from Matt Pocock's `grill-me` skill in `mattpocock/skills`)*
 
 ### Maintainer / documentation skills
 - `code-documenter` — comprehensive project documentation generation for APIs, apps, CLIs, and libraries
@@ -112,6 +112,14 @@ skills/
   youtube-caption/
 shared/
 ```
+
+## Attribution notes
+
+This public extraction is primarily a curated subset of my broader private skills library, but not every included skill originated entirely from scratch here.
+
+- `grill-me` is included as a curated/adapted skill and should credit the original public source: **Matt Pocock's `grill-me` skill** from [`mattpocock/skills`](https://github.com/mattpocock/skills).
+
+Where future provenance notes matter, this README should continue to distinguish between original skills, adapted skills, and curated inclusions.
 
 ## Notes on sanitisation
 
