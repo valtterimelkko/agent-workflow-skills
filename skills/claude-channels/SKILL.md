@@ -327,7 +327,7 @@ Study these for production patterns (pairing flows, file attachments, message ed
 
 Channels capture what Claude **voluntarily** calls (reply tool). For guaranteed event capture (every tool execution, session lifecycle), combine with **Claude Code hooks**, which fire at lifecycle points and can HTTP POST to a local receiver in your channel plugin.
 
-### Hooks Configuration (for example `~/.claude/settings.json`)
+### Hooks Configuration (for example `<CLAUDE_HOME>/settings.json`)
 
 ```json
 {

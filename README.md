@@ -29,6 +29,7 @@ This repo contains a small set of opinionated skills for agent workflows such as
 - visual variation generation
 
 Each skill lives in its own folder and is designed to be readable, copyable, and adaptable.
+Some of the bundled scripts expect you to provide your own API keys, proxy credentials, or local shell-environment setup; the public repo includes the skill logic, but you still need to supply your own credentials and environment wiring.
 
 ## What this repo is not
 
@@ -59,13 +60,28 @@ A skill qualified for this repo only if it was:
 - `code-documenter` — comprehensive project documentation generation for APIs, apps, CLIs, and libraries
 - `openapi-schema` — creation and repair of OpenAPI 3.1 schemas for API integrations and GPT-style actions
 - `socialmedia-optimization` — implementation and validation of Open Graph and social preview metadata
+- `context7-search` — search for the correct Context7 library ID before documentation lookup
+- `context7-docs` — fetch current library/framework documentation from Context7
+- `deep-research` — broad, auditable multi-source research workflow for high-stakes topics
 
 ### Agent operations and ecosystem skills
 - `web-data-acquisition` — routing layer for choosing the right scraping, crawling, or extraction approach
+- `web-crawling` — bounded multi-page crawl workflow with optional local Browserless examples
+- `webfetch-skill` — cleaner single-page/few-page extraction workflow using a bundled fetch script
 - `claude-p` — operational guidance for programmatic multi-turn Claude Code CLI usage
 - `claude-channels` — guidance for building channel plugins that push events into live Claude Code sessions
 - `opencode-plugin` — development and troubleshooting guide for OpenCode plugins
 - `artifact-variations` — generate multiple visual/copy/layout variations as a browsable selection artifact
+- `pi-extension` — build and debug Pi extensions with current extension APIs and patterns
+
+### Document workflow skills
+- `docx-draft` — round-trip Word-to-markdown drafting while preserving document structure for rebuild
+- `pptx-draft` — round-trip PowerPoint-to-markdown drafting while preserving presentation structure for rebuild
+- `audio-transcription-workflow` — convert local audio files into cleaned markdown transcripts with layered fallbacks
+
+### Documentation lookup and media skills
+- `youtube-search` — search YouTube videos with filtering for channels, dates, sort order, and duration
+- `youtube-caption` — fetch YouTube captions/transcripts and metadata with optional proxy support
 
 ## Structure
 
@@ -78,11 +94,23 @@ skills/
   code-documenter/
   openapi-schema/
   socialmedia-optimization/
+  context7-search/
+  context7-docs/
+  deep-research/
   web-data-acquisition/
+  web-crawling/
+  webfetch-skill/
   claude-p/
   claude-channels/
   opencode-plugin/
   artifact-variations/
+  pi-extension/
+  docx-draft/
+  pptx-draft/
+  audio-transcription-workflow/
+  youtube-search/
+  youtube-caption/
+shared/
 ```
 
 ## Notes on sanitisation

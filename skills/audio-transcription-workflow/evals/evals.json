@@ -1,0 +1,23 @@
+{
+  "skill_name": "audio-transcription-workflow",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I put a Telegram-style voice note at /tmp/inbox/meeting-note.oga. Use the old VoiceNote Bot workflow, but without Telegram, and save the result as markdown in /tmp/out-transcripts.",
+      "expected_output": "Agent should trigger the audio-transcription-workflow skill, run the bundled transcription script on the single .oga file, produce a markdown transcript with a YAML metadata header, and mention the output directory plus manifest path.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Please batch transcribe everything under /path/to/interviews/raw-audio into cleaned markdown transcripts. Keep subfolder discovery on, and put the outputs in /path/to/interviews/transcripts.",
+      "expected_output": "Agent should trigger the skill, run the script against the folder with --recursive, produce one markdown file per audio file, and report the manifest summary rather than pasting large transcripts into chat.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Use the legacy voice-note transcription workflow on these files: /path/to/audio/a.m4a and /path/to/audio/b.webm. If cleanup is unavailable, still give me markdown files and tell me what happened.",
+      "expected_output": "Agent should trigger the skill, process multiple explicit files, preserve the workflow order, tolerate missing cleanup by writing raw-transcript markdown with warnings, and tell the user whether cleanup matched the legacy path fully.",
+      "files": []
+    }
+  ]
+}
