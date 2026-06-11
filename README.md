@@ -1,6 +1,8 @@
 # Agent Workflow Skills
 
-A curated public collection of practical `SKILL.md` agent skills for coding-agent workflows.
+A curated public collection of practical `SKILL.md` agent skills for AI-agent workflows.
+
+Most of these skills happen to be used inside coding-agent harnesses, but they are not only for coding. Many of them are for research, media, document workflows, qualitative analysis, web capture, and agent-operational design more broadly.
 
 ## Project story
 
@@ -61,8 +63,13 @@ A skill qualified for this repo only if it was:
 - `openapi-schema` — creation and repair of OpenAPI 3.1 schemas for API integrations and GPT-style actions, built from public documentation and implementation research
 - `socialmedia-optimization` — implementation and validation of Open Graph and social preview metadata
 - `context7-search` — search for the correct Context7 library ID before documentation lookup; useful when agents need the exact library handle before fetching docs
-- `context7-docs` — fetch current library/framework documentation from Context7, a service that helps coding agents retrieve up-to-date library syntax and usage examples beyond training-cutoff knowledge
+- `context7-docs` — fetch current library/framework documentation from Context7, a service that helps agents retrieve up-to-date library syntax and usage examples beyond training-cutoff knowledge
+
+### Research and analysis skills
 - `deep-research` — broad, auditable multi-source research workflow for high-stakes topics, built by me and inspired in part by Google Gemini Deep Research while aiming for stronger controllability and, in some cases, better output quality
+- `thematic-analysis` — collaborative coding and theme development for qualitative text data; especially useful for interview transcripts, reflective writing, and other qualitative datasets
+- `academic-writing` — British academic writing best-practice guide for higher-education prose
+- `video-deep-understanding` — grounded video understanding workflow that combines transcript evidence with targeted visual/frame evidence when you need an agent to understand what is happening in a video, not just what is being said
 
 ### Agent operations and ecosystem skills
 - `web-data-acquisition` — routing layer for choosing the right scraping, crawling, or extraction approach
@@ -79,17 +86,14 @@ A skill qualified for this repo only if it was:
 - `pptx-draft` — round-trip PowerPoint-to-markdown drafting while preserving presentation structure for rebuild
 - `audio-transcription-workflow` — convert local audio files into cleaned markdown transcripts with layered fallbacks
 
-### Documentation lookup and media skills
+### Media, web, and asset skills
 - `youtube-search` — search YouTube videos with filtering for channels, dates, sort order, and duration
 - `youtube-caption` — fetch YouTube captions/transcripts and metadata with optional proxy support
-- `text-to-speech` — local CPU-based text-to-speech generation using Supertonic
+- `text-to-speech` — local CPU-based text-to-speech generation using [Supertonic](https://github.com/supertone-inc/supertonic)
 - `transcribe-audio` — simple local Whisper-service transcription for English audio files
-- `thematic-analysis` — collaborative coding and theme development for qualitative text data
-- `video-deep-understanding` — transcript-plus-frames workflow for grounded video analysis
 - `video-use` — conversation-driven transcript-led video editing workflow
 - `web-asset-generator` — generate favicons, app icons, and social preview assets
 - `web-create-assets` — create net-new branded UI assets that match an existing design system
-- `academic-writing` — British academic writing best-practice guide for higher-education prose
 - `agy-p` — programmatic non-interactive Antigravity CLI integration guide
 - `amazon-uk-scraper` — Amazon UK product/spec scraping with optional anti-bot routing
 - `scraping-reddit` — Reddit opportunity/pain-point scraping with optional proxy and OAuth setup
@@ -147,7 +151,7 @@ Some skills are pure workflow/documentation skills. Others include scripts that 
 
 ### Mostly self-contained / local-first
 - `systematic-debugging`, `test-driven-development`, `handoff`, `grill-me`, `code-documenter`, `openapi-schema`, `socialmedia-optimization`, `academic-writing`, `thematic-analysis`, `artifact-variations` — mostly documentation/prompt workflow, little or no external setup.
-- `text-to-speech` — requires local Python dependencies and the Supertonic model download.
+- `text-to-speech` — requires local Python dependencies and the Supertonic model download; see [supertone-inc/supertonic](https://github.com/supertone-inc/supertonic).
 - `transcribe-audio` — requires a local Whisper ASR service at `http://localhost:9000` or an equivalent setup.
 
 ### Requires your own API keys or service credentials
@@ -175,6 +179,58 @@ Some skills are pure workflow/documentation skills. Others include scripts that 
 
 In general: **the public repo ships the skill logic, examples, and helper scripts, but you must supply your own credentials, services, and environment wiring.**
 
+## How I use some of these skills in practice
+
+### `artifact-variations`
+This is one of my favourite ways to work with visual ambiguity. Instead of trying to describe the perfect output in one go, I ask the agent to generate multiple variations at once — for example three hero sections, three landing page directions, three presentation covers, or three image/layout options. Comparing options visually is usually much easier than writing ever more precise instructions blindly.
+
+In practice I often combine it with a fast publishing/deployment step — sometimes with tools like here.now — so I can view the variations in a browser, compare what I like and dislike, and then ask for a refined second round or a hybrid of the strongest options.
+
+### `docx-draft` and `pptx-draft`
+These two are especially valuable in real professional workflows because they separate **content editing** from **layout preservation**.
+
+The core idea is:
+1. start from a real Word or PowerPoint file that already has the right formatting, branding, logos, colours, masters, and layout rules
+2. convert it into structured markdown that preserves enough structure to rebuild accurately
+3. let the agent edit the content inside that structured representation
+4. convert it back while keeping the original document formatting/layout intact
+
+That makes these skills unusually practical for corporate templates, institutionally formatted documents, branded decks, and any workflow where normal AI document generation would otherwise damage layout quality.
+
+### `video-deep-understanding`
+This is not just a transcript workflow. It is for cases where you need an agent to understand a video **visually as well as verbally** — for example a product demo, a UI walkthrough, a recorded presentation, or a screen capture where the important evidence is partly on screen rather than in speech.
+
+It can be token-heavy, but it is the best fit when the task is "understand what is happening in this video in detail", not merely "transcribe what was said".
+
+### `amazon-uk-scraper`
+I often use this as part of pre-purchase research. It helps an agent compare product variants, check whether a specific item is actually easy to buy from Amazon UK, verify delivery/Prime availability, and cross-check specs before ordering.
+
+That makes it useful both for straightforward buying decisions and for narrowing down exactly which version of a product I mean when multiple near-identical listings exist.
+
+### `capture-dashboard`
+I use this when I want to capture the essence of an existing dashboard — including authenticated ones — so I can study it, benchmark it, or reuse the best ideas when designing my own dashboard/UI.
+
+It is helpful both for documentation/archival capture and for design analysis of real products that already solve similar interface problems well.
+
+### `saas-idea-finder`
+This is a multi-source opportunity-discovery workflow rather than a single search prompt. The goal is to help an agent gather signals from multiple platforms, look for recurring pain points, and turn them into structured SaaS or micro-SaaS opportunities.
+
+Depending on how much setup you provide, it can combine optional connectors such as:
+- Reddit signals
+- X/Twitter signals
+- YouTube search
+- web search / SERP data
+- Stack Exchange signals
+- Product Hunt data
+- LLM synthesis via OpenRouter
+
+The point is not just to list ideas, but to create a more grounded pipeline for spotting repeated frustrations, workflow gaps, and commercially interesting patterns across sources.
+
+### `thematic-analysis`
+This skill sits much closer to qualitative research practice than to generic summarisation. It is designed for coding transcripts, grouping patterns, iterating themes, and checking what parts of the dataset are being foregrounded or neglected.
+
+It is especially useful for interview transcripts, reflective journals, open-text survey responses, and other qualitative datasets where the task is to build an interpretive account rather than just produce a summary.
+
 ## Attribution and provenance notes
 
 This public extraction is primarily a curated subset of my broader private skills library, but not every included skill has the same origin story.
@@ -182,6 +238,8 @@ This public extraction is primarily a curated subset of my broader private skill
 - `grill-me` is included as a curated/adapted skill and should credit the original public source: **Matt Pocock's `grill-me` skill** from [`mattpocock/skills`](https://github.com/mattpocock/skills).
 - `openapi-schema`, `claude-p`, `claude-channels`, `opencode-plugin`, and `pi-extension` are based on public documentation and implementation research rather than on private source material.
 - `deep-research` is an original skill built by me, influenced in part by the product direction of Gemini Deep Research but implemented as my own agent workflow.
+- `text-to-speech` should credit **Supertonic** by Supertone as the underlying local TTS engine: [GitHub](https://github.com/supertone-inc/supertonic).
+- `thematic-analysis` is strongly informed by the thematic analysis tradition associated with **Virginia Braun** and **Victoria Clarke**, especially their 2006 paper *Using thematic analysis in psychology* and later book-length guidance such as *Thematic Analysis: A Practical Guide*.
 
 Useful upstream/public references for some included skills:
 - **Pi Coding Agent** — website: [pi.dev](https://pi.dev/) · GitHub: [earendil-works/pi](https://github.com/earendil-works/pi)
