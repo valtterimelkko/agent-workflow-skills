@@ -106,4 +106,4 @@ There is no single required runtime. These skills are written in a portable styl
 
 ## Status
 
-This repo is being prepared as a fresh public extraction from a much larger private library. Before publishing, run one final secret/path audit over the extracted folders and then push to a new public GitHub repository.
+This repository is a fresh public extraction from a much larger private skills library. Only the skills that felt broadly useful and low-risk to share have been included here.
