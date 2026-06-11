@@ -58,21 +58,21 @@ A skill qualified for this repo only if it was:
 
 ### Maintainer / documentation skills
 - `code-documenter` — comprehensive project documentation generation for APIs, apps, CLIs, and libraries
-- `openapi-schema` — creation and repair of OpenAPI 3.1 schemas for API integrations and GPT-style actions
+- `openapi-schema` — creation and repair of OpenAPI 3.1 schemas for API integrations and GPT-style actions, built from public documentation and implementation research
 - `socialmedia-optimization` — implementation and validation of Open Graph and social preview metadata
-- `context7-search` — search for the correct Context7 library ID before documentation lookup
-- `context7-docs` — fetch current library/framework documentation from Context7
-- `deep-research` — broad, auditable multi-source research workflow for high-stakes topics
+- `context7-search` — search for the correct Context7 library ID before documentation lookup; useful when agents need the exact library handle before fetching docs
+- `context7-docs` — fetch current library/framework documentation from Context7, a service that helps coding agents retrieve up-to-date library syntax and usage examples beyond training-cutoff knowledge
+- `deep-research` — broad, auditable multi-source research workflow for high-stakes topics, built by me and inspired in part by Google Gemini Deep Research while aiming for stronger controllability and, in some cases, better output quality
 
 ### Agent operations and ecosystem skills
 - `web-data-acquisition` — routing layer for choosing the right scraping, crawling, or extraction approach
 - `web-crawling` — bounded multi-page crawl workflow with optional local Browserless examples
 - `webfetch-skill` — cleaner single-page/few-page extraction workflow using a bundled fetch script
-- `claude-p` — operational guidance for programmatic multi-turn Claude Code CLI usage
-- `claude-channels` — guidance for building channel plugins that push events into live Claude Code sessions
-- `opencode-plugin` — development and troubleshooting guide for OpenCode plugins
+- `claude-p` — operational guidance for programmatic non-interactive / print-mode Claude Code CLI usage (`claude -p`), based on public documentation and observed scripting patterns
+- `claude-channels` — guidance for building channel plugins that push events into live Claude Code sessions, based on public documentation for the channels interface
+- `opencode-plugin` — development and troubleshooting guide for OpenCode plugins, based on public OpenCode plugin documentation and ecosystem research
 - `artifact-variations` — generate multiple visual/copy/layout variations as a browsable selection artifact
-- `pi-extension` — build and debug Pi extensions with current extension APIs and patterns
+- `pi-extension` — build and debug Pi extensions with current extension APIs and patterns, based on public Pi Coding Agent documentation and examples
 
 ### Document workflow skills
 - `docx-draft` — round-trip Word-to-markdown drafting while preserving document structure for rebuild
@@ -113,11 +113,18 @@ skills/
 shared/
 ```
 
-## Attribution notes
+## Attribution and provenance notes
 
-This public extraction is primarily a curated subset of my broader private skills library, but not every included skill originated entirely from scratch here.
+This public extraction is primarily a curated subset of my broader private skills library, but not every included skill has the same origin story.
 
 - `grill-me` is included as a curated/adapted skill and should credit the original public source: **Matt Pocock's `grill-me` skill** from [`mattpocock/skills`](https://github.com/mattpocock/skills).
+- `openapi-schema`, `claude-p`, `claude-channels`, `opencode-plugin`, and `pi-extension` are based on public documentation and implementation research rather than on private source material.
+- `deep-research` is an original skill built by me, influenced in part by the product direction of Gemini Deep Research but implemented as my own agent workflow.
+
+Useful upstream/public references for some included skills:
+- **Pi Coding Agent** — website: [pi.dev](https://pi.dev/) · GitHub: [earendil-works/pi](https://github.com/earendil-works/pi)
+- **OpenCode** — website: [opencode.ai](https://opencode.ai/) · GitHub: [opencode-ai/opencode](https://github.com/opencode-ai/opencode)
+- **Camofox / Camoufox** — useful optional anti-bot companion for research and crawling workflows: GitHub: [daijro/camoufox](https://github.com/daijro/camoufox)
 
 Where future provenance notes matter, this README should continue to distinguish between original skills, adapted skills, and curated inclusions.
 
@@ -131,6 +138,8 @@ This public extraction intentionally removes or generalises:
 - any skill that felt too tied to private tenants, grading systems, or personal workflow data
 
 Some skills still reference ecosystem-specific conventions such as Claude Code paths or harness concepts. Those references are included only where they are part of the useful operational knowledge, and should be adapted to your own environment.
+
+For bot-protected web research or crawling workflows, a practical setup can combine the included skills with optional anti-bot fallbacks such as **Camofox / Camoufox** and, where justified, a residential proxy. Those are not required for the core skills, but they can improve resilience against challenge pages and bot protection.
 
 ## How to use
 
