@@ -1,0 +1,39 @@
+{
+  "skill_name": "artifact-variations",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a single self-contained HTML artifact that shows 8 genuinely distinct hero-section variations for a B2B carbon accounting SaaS called Northstar Carbon. Keep the product story constant (automated emissions data collection, audit-ready reports, supplier engagement, demo CTA) but vary layout, typography voice, density, and visual direction. The artifact must include: a header line stating what stays constant, a short ID per variation (V1–V8), a descriptive angle name, a one-line 'what changed' note per variation, the rendered hero, and a selection footer with all IDs listed so the user can note picks like 'V3 layout + V6 typography'. Save as a self-contained HTML file.",
+      "expected_output": "One browsable HTML file with 8 visually distinct hero variations, each with a short ID, angle name, and 'what changed' note, plus a selection footer and a header stating constants.",
+      "files": [],
+      "expectations": [
+        "A self-contained HTML file is created.",
+        "The artifact contains at least 8 clearly separated hero variations.",
+        "Each variation has a short ID (V1, V2, etc.).",
+        "Each variation has a descriptive angle name, not just a number.",
+        "Each variation has a 'what changed' note summarising the combination of axes that differ.",
+        "A selection footer or summary section lists all short IDs to support mix-and-match picking.",
+        "The artifact includes a header or intro stating what stays constant across all variations.",
+        "No two variations share the same layout archetype and typographic voice.",
+        "The product story (Northstar Carbon, audit-ready, supplier engagement, demo CTA) is preserved across all variations."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a single self-contained HTML artifact that previews 6 alternative LinkedIn launch posts for a founder announcing a new AI note-taking product called BriefDock. Each preview must mimic a realistic LinkedIn post card (avatar, name, connection degree, post body, engagement row), keep the same announcement facts, but explore six distinct tones: operator, reflective, bold, teacherly, minimal, community-first. Give each variation a short ID (P1–P6), a tone label, and a one-line note on what the opening hook strategy is. Include a selection footer. Save as one self-contained HTML file.",
+      "expected_output": "One HTML file with 6 LinkedIn-card-style post previews, each with a short ID, tone label, hook-strategy note, and a final selection footer.",
+      "files": [],
+      "expectations": [
+        "A self-contained HTML file is created.",
+        "The artifact contains 6 clearly separated post previews.",
+        "Each preview is rendered as a LinkedIn card surface (avatar, name, post body, engagement row), not raw text.",
+        "Each preview has a short ID (P1–P6).",
+        "Each preview has a tone label.",
+        "Each preview has a one-line note on opening hook strategy.",
+        "A selection footer lists all IDs to support quick reference.",
+        "Core launch facts (product name BriefDock, AI note-taking, founder announcement) are preserved across all variants.",
+        "Tone varies meaningfully across the six variants (not all similar register)."
+      ]
+    }
+  ]
+}
