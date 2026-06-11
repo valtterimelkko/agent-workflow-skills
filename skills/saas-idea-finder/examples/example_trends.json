@@ -1,0 +1,90 @@
+{
+  "success": true,
+  "data": {
+    "lens": "Developer Tools Monday",
+    "date": "2026-02-08",
+    "lookback_days": 7,
+    "sources_used": [
+      "hackernews",
+      "reddit",
+      "github",
+      "devto",
+      "hn_algolia"
+    ],
+    "sources_failed": [],
+    "topics": [
+      {
+        "name": "Local-first software architecture",
+        "score": 87.5,
+        "source_count": 3,
+        "sources": [
+          {
+            "type": "hackernews",
+            "title": "Why local-first software?",
+            "url": "https://news.ycombinator.com/item?id=123456",
+            "score": 543,
+            "comments": 187
+          },
+          {
+            "type": "reddit",
+            "title": "Local-first web apps: The future of offline-capable software",
+            "url": "https://reddit.com/r/programming/comments/abc123",
+            "upvotes": 1204,
+            "comments": 234,
+            "subreddit": "programming"
+          },
+          {
+            "type": "github",
+            "repo": "local-first/principles",
+            "description": "Principles for local-first software architecture",
+            "url": "https://github.com/local-first/principles",
+            "stars": 4523,
+            "language": "JavaScript"
+          }
+        ],
+        "keywords": [
+          "local-first",
+          "offline",
+          "sync",
+          "crdts",
+          "architecture",
+          "software"
+        ],
+        "why_trending": "Mentioned across 3 source(s)",
+        "already_analyzed": false
+      },
+      {
+        "name": "Rust-based CLI tools replacing traditional Unix utilities",
+        "score": 65.2,
+        "source_count": 2,
+        "sources": [
+          {
+            "type": "hackernews",
+            "title": "Modern replacements for Unix tools written in Rust",
+            "url": "https://news.ycombinator.com/item?id=789012",
+            "score": 412,
+            "comments": 156
+          },
+          {
+            "type": "reddit",
+            "title": "Rust CLI tools you should know about",
+            "url": "https://reddit.com/r/rust/comments/def456",
+            "upvotes": 892,
+            "comments": 123,
+            "subreddit": "rust"
+          }
+        ],
+        "keywords": [
+          "rust",
+          "cli",
+          "tools",
+          "unix",
+          "modern",
+          "replacements"
+        ],
+        "why_trending": "Mentioned across 2 source(s)",
+        "already_analyzed": false
+      }
+    ]
+  }
+}

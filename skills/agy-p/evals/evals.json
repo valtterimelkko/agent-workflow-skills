@@ -1,0 +1,23 @@
+{
+  "skill_name": "agy-p",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm building a Node server that should call Antigravity CLI headlessly whenever a user asks for a repo summary. I want it to reuse my logged-in Google subscription, run in /srv/app, and fail safely if the command hangs. What exact integration pattern should I use?",
+      "expected_output": "Explains agy -p subprocess usage, cwd handling, auth reuse, print timeout, outer timeout, and stdout/stderr capture.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I can already run agy manually, but my Python wrapper needs follow-up turns. How do I resume a previous agy conversation from code, and are there any parsing caveats on stdout?",
+      "expected_output": "Covers --conversation / --continue, how conversation IDs are discovered, and warns that resumed stdout may include prior replies.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Can I just run agy --sandbox --dangerously-skip-permissions in CI and trust that as my security boundary?",
+      "expected_output": "Warns against relying on that combination alone, mentions the known sandbox-bypass concern, and recommends external isolation.",
+      "files": []
+    }
+  ]
+}

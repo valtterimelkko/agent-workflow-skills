@@ -82,6 +82,20 @@ A skill qualified for this repo only if it was:
 ### Documentation lookup and media skills
 - `youtube-search` — search YouTube videos with filtering for channels, dates, sort order, and duration
 - `youtube-caption` — fetch YouTube captions/transcripts and metadata with optional proxy support
+- `text-to-speech` — local CPU-based text-to-speech generation using Supertonic
+- `transcribe-audio` — simple local Whisper-service transcription for English audio files
+- `thematic-analysis` — collaborative coding and theme development for qualitative text data
+- `video-deep-understanding` — transcript-plus-frames workflow for grounded video analysis
+- `video-use` — conversation-driven transcript-led video editing workflow
+- `web-asset-generator` — generate favicons, app icons, and social preview assets
+- `web-create-assets` — create net-new branded UI assets that match an existing design system
+- `academic-writing` — British academic writing best-practice guide for higher-education prose
+- `agy-p` — programmatic non-interactive Antigravity CLI integration guide
+- `amazon-uk-scraper` — Amazon UK product/spec scraping with optional anti-bot routing
+- `scraping-reddit` — Reddit opportunity/pain-point scraping with optional proxy and OAuth setup
+- `scraping-twitter` — Twitter/X opportunity/pain-point scraping via TwitterAPI.io
+- `saas-idea-finder` — multi-source SaaS idea discovery pipeline with optional API integrations
+- `capture-dashboard` — screenshot/HTML capture for authenticated dashboards using exported cookies
 
 ## Structure
 
@@ -110,8 +124,56 @@ skills/
   audio-transcription-workflow/
   youtube-search/
   youtube-caption/
+  text-to-speech/
+  transcribe-audio/
+  thematic-analysis/
+  video-deep-understanding/
+  video-use/
+  web-asset-generator/
+  web-create-assets/
+  academic-writing/
+  agy-p/
+  amazon-uk-scraper/
+  scraping-reddit/
+  scraping-twitter/
+  saas-idea-finder/
+  capture-dashboard/
 shared/
 ```
+
+## Setup notes by skill
+
+Some skills are pure workflow/documentation skills. Others include scripts that require you to supply your own credentials, browser cookies, proxy access, or local services.
+
+### Mostly self-contained / local-first
+- `systematic-debugging`, `test-driven-development`, `handoff`, `grill-me`, `code-documenter`, `openapi-schema`, `socialmedia-optimization`, `academic-writing`, `thematic-analysis`, `artifact-variations` — mostly documentation/prompt workflow, little or no external setup.
+- `text-to-speech` — requires local Python dependencies and the Supertonic model download.
+- `transcribe-audio` — requires a local Whisper ASR service at `http://localhost:9000` or an equivalent setup.
+
+### Requires your own API keys or service credentials
+- `context7-search`, `context7-docs` — `CONTEXT7_API_KEY`
+- `youtube-search` — `YOUTUBE_API_KEY`
+- `youtube-caption` — optional `YOUTUBE_PROXY_URL` (or legacy `REDDIT_PROXY_URL`) when proxy support is needed
+- `audio-transcription-workflow` — optional `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, optional `AUDIO_TRANSCRIPTION_LEGACY_ENV`
+- `web-create-assets` — `RUNWARE_API_KEY`
+- `video-deep-understanding` — optional `OPENAI_API_KEY`, optional `VIDEO_PROXY_URL` (or legacy `REDDIT_PROXY_URL`)
+- `scraping-twitter` — `TWITTERAPI_KEY`
+- `scraping-reddit` — optional `REDDIT_PROXY_URL`, optional Reddit OAuth credentials
+- `saas-idea-finder` — several optional integrations such as `OPENROUTER_API_KEY`, `TWITTERAPI_KEY`, `YOUTUBE_API_KEY`, `SERPAPI_KEY`, `STACK_KEY`, `PRODUCTHUNT_TOKEN`, Reddit proxy/OAuth, and related sources
+
+### Requires local browser/session/cookie setup
+- `capture-dashboard` — exported browser cookies for the target authenticated dashboard
+- `amazon-uk-scraper` — optional anti-bot routing/proxy setup if you need UK-specific pricing/delivery accuracy
+
+### Requires local tool/runtime setup
+- `pi-extension` — Pi Coding Agent installation and docs/examples for your installed version
+- `claude-p`, `claude-channels` — Claude Code CLI installation and local auth state
+- `opencode-plugin` — OpenCode installation and plugin runtime
+- `agy-p` — Antigravity CLI installation and local auth state
+- `video-use` — ffmpeg plus the repo's editing helpers and any optional animation/video tooling you choose to use
+- `web-crawling`, `webfetch-skill`, `web-data-acquisition`, `deep-research` — optional anti-bot or browser-recovery additions such as Camoufox, Browserless, or residential proxies can improve resilience, but are not universally required.
+
+In general: **the public repo ships the skill logic, examples, and helper scripts, but you must supply your own credentials, services, and environment wiring.**
 
 ## Attribution and provenance notes
 

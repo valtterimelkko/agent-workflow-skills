@@ -21,7 +21,8 @@ import requests
 import re
 from pathlib import Path
 from typing import Optional, Dict, Any, List
-sys.path.insert(0, str(Path.home() / '.skills-global/shared'))
+SHARED_DIR = Path(__file__).resolve().parents[3] / 'shared'
+sys.path.insert(0, str(SHARED_DIR))
 from credentials import load_credential
 
 

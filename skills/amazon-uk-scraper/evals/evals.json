@@ -1,0 +1,23 @@
+{
+  "skill_name": "amazon-uk-scraper",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Check if this graphics card is in stock on Amazon UK and what its specs are: ASIN B0972BP9YR",
+      "expected_output": "Product title, availability status (in stock or not), price, Prime/delivery info, and a list of technical specs from the Amazon listing",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need to compare two CPUs on Amazon UK. Check both B09DCPL4GG and B0BJQ43HTK - are they in stock, what's the price, and what are the key specs?",
+      "expected_output": "Side-by-side comparison table with availability, price, and specs for both ASINs",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Search Amazon UK for 'M.2 NVMe SSD 1TB' and find me the top 3 results with their stock status and specs",
+      "expected_output": "3 products with title, ASIN, availability, price, and tech specs extracted from their Amazon UK product pages",
+      "files": []
+    }
+  ]
+}

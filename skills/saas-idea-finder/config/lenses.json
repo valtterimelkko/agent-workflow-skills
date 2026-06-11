@@ -1,0 +1,221 @@
+{
+  "lenses": [
+    {
+      "name": "Developer Tools Monday",
+      "day_of_week": 0,
+      "github_filters": {
+        "languages": ["python", "go", "rust", "typescript", "javascript"],
+        "topics": ["cli", "devtools", "developer-experience", "dx", "tooling"]
+      },
+      "hn_algolia_keywords": ["developer tools", "CLI", "devtools", "developer experience", "DX"],
+      "devto_tags": ["devtools", "productivity", "cli", "tooling", "dx"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["developer tools", "programming", "software development", "CLI tools"],
+      "producthunt_topics": ["developer-tools", "productivity", "open-source", "developer-apis"],
+      "arxiv_categories": ["cs.SE", "cs.PL", "cs.OS"],
+      "stackexchange_tags": ["git", "bash", "command-line", "ide", "vim", "emacs"],
+      "gdelt_themes": ["TECHNOLOGY", "SOFTWARE"],
+      "serpapi_keywords": ["developer tools 2024", "CLI tools", "dev productivity"],
+      "youtube_queries": ["developer tools review", "CLI tutorial 2024"],
+      "social_platforms": {
+        "reddit": ["webdev", "programming", "MachineLearning", "vscode", "commandline"],
+        "twitter": ["#buildinpublic", "#AIdev", "#devtools", "#coding", "#DevTwitter"],
+        "instagram": ["codelife", "developer", "programming", "aitools"]
+      },
+      "research_focus": [
+        "technical implementation patterns",
+        "developer experience and ergonomics",
+        "tooling ecosystem gaps",
+        "workflow automation for developers",
+        "integration with existing tools"
+      ],
+      "saas_focus": "Tools that make developers more productive, automate repetitive tasks, or improve developer experience"
+    },
+    {
+      "name": "Business SaaS Tuesday",
+      "day_of_week": 1,
+      "github_filters": {
+        "languages": ["typescript", "javascript", "python"],
+        "topics": ["saas", "crm", "analytics", "business", "erp", "operations"]
+      },
+      "hn_algolia_keywords": ["B2B SaaS", "business software", "CRM", "startup tools", "SMB software"],
+      "devto_tags": ["saas", "business", "startup", "productivity", "entrepreneurship"],
+      "newsapi_category": "business",
+      "newsapi_keywords": ["SaaS", "business software", "startup", "B2B", "CRM"],
+      "producthunt_topics": ["saas", "productivity", "marketing", "sales", "analytics"],
+      "arxiv_categories": ["cs.CY", "econ.GN", "cs.CE"],
+      "stackexchange_tags": ["saas", "startup", "business", "project-management", "agile"],
+      "gdelt_themes": ["BUSINESS", "ECONOMICS", "TECHNOLOGY"],
+      "serpapi_keywords": ["B2B SaaS 2024", "business automation tools", "CRM software"],
+      "youtube_queries": ["business SaaS review", "startup tools 2024"],
+      "social_platforms": {
+        "reddit": ["Flipping", "Etsy", "Ebay", "Depop", "Poshmark", "AmazonFBA", "smallbusiness"],
+        "twitter": ["#reseller", "#ecommerce", "#etsyshop", "#smallbusiness", "#sidehustle"],
+        "instagram": ["etsyshop", "smallbusinessowner", "handmadebusiness", "onlineshop"]
+      },
+      "research_focus": [
+        "market size and growth potential",
+        "customer pain points and budgets",
+        "pricing models and monetization",
+        "competitive landscape analysis",
+        "go-to-market strategy considerations"
+      ],
+      "saas_focus": "B2B SaaS solutions for SMBs addressing operational inefficiencies or workflow bottlenecks"
+    },
+    {
+      "name": "AI/ML Wednesday",
+      "day_of_week": 2,
+      "github_filters": {
+        "languages": ["python", "jupyter-notebook"],
+        "topics": ["machine-learning", "artificial-intelligence", "deep-learning", "llm", "generative-ai", "nlp"]
+      },
+      "hn_algolia_keywords": ["LLM", "GPT", "AI agents", "machine learning", "generative AI"],
+      "devto_tags": ["ai", "machinelearning", "chatgpt", "llm", "python"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["artificial intelligence", "machine learning", "AI tools", "ChatGPT", "generative AI"],
+      "producthunt_topics": ["artificial-intelligence", "machine-learning", "chatgpt", "ai-tools", "generative-ai"],
+      "arxiv_categories": ["cs.AI", "cs.LG", "cs.CL", "cs.CV"],
+      "stackexchange_tags": ["python", "machine-learning", "deep-learning", "nlp", "pytorch", "tensorflow"],
+      "gdelt_themes": ["TECHNOLOGY", "ARTIFICIAL_INTELLIGENCE"],
+      "serpapi_keywords": ["AI tools 2024", "LLM applications", "generative AI startups"],
+      "youtube_queries": ["AI tools tutorial", "LLM applications 2024"],
+      "social_platforms": {
+        "reddit": ["MachineLearning", "LocalLLaMA", "ChatGPT", "ClaudeAI", "artificial"],
+        "twitter": ["#AI", "#LLM", "#generativeAI", "#ChatGPT", "#AIdev"],
+        "instagram": ["aitools", "artificialintelligence", "machinelearning"]
+      },
+      "research_focus": [
+        "current limitations of existing AI tools",
+        "practical applications for non-technical users",
+        "emerging techniques and capabilities",
+        "cost and accessibility barriers",
+        "privacy and data concerns"
+      ],
+      "saas_focus": "AI-powered tools for non-technical users that democratize ML capabilities or solve domain-specific problems"
+    },
+    {
+      "name": "Data & Analytics Thursday",
+      "day_of_week": 3,
+      "github_filters": {
+        "languages": ["python", "sql", "r", "javascript"],
+        "topics": ["data-visualization", "analytics", "database", "business-intelligence", "data-science"]
+      },
+      "hn_algolia_keywords": ["data analytics", "data visualization", "business intelligence", "SQL", "data pipeline"],
+      "devto_tags": ["data", "analytics", "datascience", "visualization", "sql"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["data analytics", "business intelligence", "data visualization", "big data", "data science"],
+      "producthunt_topics": ["analytics", "data-science", "business-intelligence", "database", "spreadsheets"],
+      "arxiv_categories": ["cs.DB", "cs.IR", "stat.CO"],
+      "stackexchange_tags": ["sql", "database", "python", "pandas", "data-visualization"],
+      "gdelt_themes": ["TECHNOLOGY", "DATA", "ANALYTICS"],
+      "serpapi_keywords": ["data analytics tools", "BI software 2024", "data visualization"],
+      "youtube_queries": ["data analytics tools", "SQL tutorial 2024"],
+      "social_platforms": {
+        "reddit": ["dataengineering", "businessintelligence", "analytics", "datascience", "excel"],
+        "twitter": ["#dataviz", "#analytics", "#BI", "#dashboard", "#dataengineering"],
+        "instagram": ["datavisualization", "analytics", "dashboard", "excel"]
+      },
+      "research_focus": [
+        "data pipeline challenges and bottlenecks",
+        "visualization needs and gaps",
+        "real-time analytics requirements",
+        "data integration pain points",
+        "non-technical user accessibility"
+      ],
+      "saas_focus": "No-code or low-code data tools for analysts and business users without technical backgrounds"
+    },
+    {
+      "name": "Productivity & Automation Friday",
+      "day_of_week": 4,
+      "github_filters": {
+        "languages": ["python", "javascript", "typescript"],
+        "topics": ["automation", "productivity", "workflow", "no-code", "rpa"]
+      },
+      "hn_algolia_keywords": ["productivity", "automation", "no-code", "workflow", "IFTTT"],
+      "devto_tags": ["productivity", "automation", "webdev", "javascript", "python"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["productivity", "automation", "workflow", "no-code", "efficiency"],
+      "producthunt_topics": ["productivity", "automation", "workflow", "nocode", "task-management"],
+      "arxiv_categories": ["cs.HC", "cs.CY", "cs.SE"],
+      "stackexchange_tags": ["python", "automation", "scripting", "workflow", "productivity"],
+      "gdelt_themes": ["TECHNOLOGY", "PRODUCTIVITY", "AUTOMATION"],
+      "serpapi_keywords": ["productivity tools 2024", "workflow automation", "no-code platforms"],
+      "youtube_queries": ["productivity tools review", "automation tutorial 2024"],
+      "social_platforms": {
+        "reddit": ["devops", "sysadmin", "kubernetes", "nocode", "selfhosted", "homelab"],
+        "twitter": ["#devops", "#automation", "#nocode", "#infrastructure", "#kubernetes"],
+        "instagram": ["automation", "nocode", "workflow", "productivity"]
+      },
+      "research_focus": [
+        "manual repetitive processes",
+        "workflow pain points and friction",
+        "integration and connectivity needs",
+        "time-consuming administrative tasks",
+        "context switching overhead"
+      ],
+      "saas_focus": "Workflow automation tools for knowledge workers that eliminate repetitive tasks or connect disconnected systems"
+    },
+    {
+      "name": "Design & Frontend Saturday",
+      "day_of_week": 5,
+      "github_filters": {
+        "languages": ["javascript", "typescript", "css", "html"],
+        "topics": ["frontend", "design", "ui", "css", "react", "vue", "svelte", "web-components"]
+      },
+      "hn_algolia_keywords": ["React", "Vue", "frontend", "web design", "CSS", "UI components"],
+      "devto_tags": ["webdev", "react", "javascript", "css", "frontend"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["web design", "UI design", "frontend development", "CSS", "React"],
+      "producthunt_topics": ["design", "ui-design", "ux-design", "web-design", "figma"],
+      "arxiv_categories": ["cs.GR", "cs.HC", "cs.MM"],
+      "stackexchange_tags": ["javascript", "reactjs", "css", "html", "frontend", "user-interface"],
+      "gdelt_themes": ["TECHNOLOGY", "DESIGN", "INTERNET"],
+      "serpapi_keywords": ["frontend tools 2024", "UI design trends", "web development"],
+      "youtube_queries": ["frontend tutorial", "UI design tools 2024"],
+      "social_platforms": {
+        "reddit": ["webdev", "css", "javascript", "reactjs", "userexperience"],
+        "twitter": ["#React", "#Vue", "#frontend", "#webdesign", "#CSS"],
+        "instagram": ["webdesign", "uidesign", "uxdesign"]
+      },
+      "research_focus": [
+        "design challenges for non-designers",
+        "component libraries and design systems",
+        "accessibility and responsiveness",
+        "design-to-code workflows",
+        "collaboration between designers and developers"
+      ],
+      "saas_focus": "Design tools for developers or no-code tools for designers to build functional frontends"
+    },
+    {
+      "name": "Infrastructure & DevOps Sunday",
+      "day_of_week": 6,
+      "github_filters": {
+        "languages": ["go", "python", "shell", "dockerfile"],
+        "topics": ["devops", "kubernetes", "docker", "cloud", "infrastructure", "monitoring", "observability"]
+      },
+      "hn_algolia_keywords": ["DevOps", "Kubernetes", "Docker", "monitoring", "infrastructure", "CI/CD"],
+      "devto_tags": ["devops", "docker", "kubernetes", "cloud", "aws"],
+      "newsapi_category": "technology",
+      "newsapi_keywords": ["DevOps", "cloud computing", "Kubernetes", "Docker", "infrastructure"],
+      "producthunt_topics": ["devops", "hosting", "cloud", "monitoring", "security"],
+      "arxiv_categories": ["cs.DC", "cs.OS", "cs.NI"],
+      "stackexchange_tags": ["docker", "kubernetes", "devops", "aws", "linux", "bash"],
+      "gdelt_themes": ["TECHNOLOGY", "CLOUD_COMPUTING", "CYBERSECURITY"],
+      "serpapi_keywords": ["DevOps tools 2024", "cloud infrastructure", "Kubernetes monitoring"],
+      "youtube_queries": ["DevOps tutorial", "Kubernetes for beginners 2024"],
+      "social_platforms": {
+        "reddit": ["devops", "kubernetes", "docker", "sysadmin", "selfhosted", "homelab"],
+        "twitter": ["#DevOps", "#Kubernetes", "#Docker", "#cloud", "#infrastructure"],
+        "instagram": ["devops", "cloudcomputing", "techlife"]
+      },
+      "research_focus": [
+        "deployment and orchestration challenges",
+        "monitoring and observability gaps",
+        "cost optimization opportunities",
+        "security and compliance needs",
+        "complexity reduction for small teams"
+      ],
+      "saas_focus": "DevOps tools for small teams that simplify infrastructure management or reduce operational overhead"
+    }
+  ]
+}
