@@ -40,7 +40,7 @@ python3 ./skills/amazon-uk-scraper/scripts/scrape_amazon_uk.py \
 
 | Mode | Flag | Price currency | Delivery dates | Cost |
 |---|---|---|---|---|
-| **UK proxy** | `--uk-proxy` | GBP ✓ | UK ✓ | Paid (IP Royal) |
+| **UK proxy** | `--uk-proxy` | GBP ✓ | UK ✓ | Paid (residential proxy) |
 | **Camofox** | *(default, no flag)* | EUR (server is in Finland) | Finland | Free |
 
 Use `--uk-proxy` whenever GBP pricing or UK delivery accuracy matters.  
@@ -68,7 +68,7 @@ To use `--uk-proxy`, configure your own UK residential proxy or adapt the script
 ## What the script handles internally — nothing else needed
 
 - **Bot protection bypass**: handled by camofox (Camoufox stealth Firefox browser). The script creates and manages the camofox session, handles any "Continue shopping" challenge page, and accepts cookie consent automatically.
-- **UK pricing/delivery**: handled by the `--uk-proxy` flag, which routes HTTP requests through an IP Royal UK residential proxy. No need to invoke a separate residential-proxy skill if you already configured the script for your own proxy setup.
+- **UK pricing/delivery**: handled by the `--uk-proxy` flag, which routes HTTP requests through a UK residential proxy you configure (Proxy-Cheap, IP Royal, or any provider). No need to invoke a separate residential-proxy skill if you already configured the script for your own proxy setup.
 - **Search**: `--search` uses camofox to load the Amazon UK search results page and extract ASINs. No manual browsing needed.
 - **Cleanup**: the script closes its own camofox tab on exit.
 

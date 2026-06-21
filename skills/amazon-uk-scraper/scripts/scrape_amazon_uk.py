@@ -21,8 +21,9 @@ Usage:
   python3 scrape_amazon_uk.py --asins B0972BP9YR --uk-proxy --out /tmp/parts.json
 
 Proxy URL:
-  Set env var IPROYAL_UK_PROXY or pass --proxy-url.
-  Format: http://user:pass_country-gb@geo.iproyal.com:12321
+  Set a residential proxy env var (PROXYCHEAP_GB_PROXY primary, or IPROYAL_UK_PROXY /
+  IPROYAL_GB_PROXY fallback) or pass --proxy-url. Any residential proxy works.
+  Format: http://user:pass@host:port
 """
 
 import subprocess
@@ -39,9 +40,10 @@ SESSION_KEY = "amz-uk-scraper"
 USER_ID = "pi-agent"
 
 # ── default UK proxy URL (can override via env or --proxy-url) ────────────
-DEFAULT_PROXY_URL = os.environ.get(
-    "IPROYAL_UK_PROXY",
-    "http://***REMOVED***:***REMOVED***@geo.iproyal.com:12321",
+DEFAULT_PROXY_URL = (
+    os.environ.get("PROXYCHEAP_GB_PROXY")
+    or os.environ.get("IPROYAL_UK_PROXY")
+    or os.environ.get("IPROYAL_GB_PROXY", "")
 )
 
 # ── camofox helpers ────────────────────────────────────────────────────────
