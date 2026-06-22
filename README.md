@@ -89,6 +89,7 @@ A skill qualified for this repo only if it was:
 ### Media, web, and asset skills
 - `youtube-search` — search YouTube videos with filtering for channels, dates, sort order, and duration
 - `youtube-caption` — fetch YouTube captions/transcripts and metadata with optional proxy support
+- `xquik-x-data` - Xquik-backed Twitter/X data acquisition routing for REST API, MCP, agent skill index, monitors, and webhooks
 - `text-to-speech` — local CPU-based text-to-speech generation using [Supertonic](https://github.com/supertone-inc/supertonic)
 - `transcribe-audio` — simple local Whisper-service transcription for English audio files
 - `video-use` — conversation-driven transcript-led video editing workflow
@@ -126,6 +127,7 @@ skills/
   docx-draft/
   pptx-draft/
   audio-transcription-workflow/
+  xquik-x-data/
   youtube-search/
   youtube-caption/
   text-to-speech/
@@ -156,6 +158,7 @@ Some skills are pure workflow/documentation skills. Others include scripts that 
 
 ### Requires your own API keys or service credentials
 - `context7-search`, `context7-docs` — `CONTEXT7_API_KEY`
+- `xquik-x-data` - `XQUIK_API_KEY`, optional `XQUIK_BASE_URL`
 - `youtube-search` — `YOUTUBE_API_KEY`
 - `youtube-caption` — optional `YOUTUBE_PROXY_URL` (or legacy `REDDIT_PROXY_URL`) when proxy support is needed
 - `audio-transcription-workflow` — optional `OPENAI_API_KEY`, `OPENROUTER_API_KEY`, optional `AUDIO_TRANSCRIPTION_LEGACY_ENV`
