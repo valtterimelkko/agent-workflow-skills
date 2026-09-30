@@ -81,6 +81,13 @@ A skill qualified for this repo only if it was:
 - `artifact-variations` — generate multiple visual/copy/layout variations as a browsable selection artifact
 - `pi-extension` — build and debug Pi extensions with current extension APIs and patterns, based on public Pi Coding Agent documentation and examples
 
+### Pi Web UI orchestration pack
+See [`packs/pi-web-ui-orchestration-pack/README.md`](./packs/pi-web-ui-orchestration-pack/README.md) for the full guide. Four skills for orchestrating child agents through [Pi Web UI](https://github.com/valtterimelkko/pi-web-ui)'s local Internal API:
+- `pi-web-ui-internal-api-orchestration` — the parent's loop: discover, create, dispatch, watch, verify and clean up child sessions
+- `long-horizon-waiting-strategies` — going idle safely and supervising children without polling
+- `orchestrated-child-worker` — the evidence-and-hand-back discipline every dispatched child follows
+- `secret-scanning` — scan repositories and artefacts for credentials before publishing
+
 ### Document workflow skills
 - `docx-draft` — round-trip Word-to-markdown drafting while preserving document structure for rebuild
 - `pptx-draft` — round-trip PowerPoint-to-markdown drafting while preserving presentation structure for rebuild
@@ -142,6 +149,12 @@ skills/
   scraping-twitter/
   saas-idea-finder/
   capture-dashboard/
+  pi-web-ui-internal-api-orchestration/
+  long-horizon-waiting-strategies/
+  orchestrated-child-worker/
+  secret-scanning/
+packs/
+  pi-web-ui-orchestration-pack/
 shared/
 ```
 
@@ -171,6 +184,7 @@ Some skills are pure workflow/documentation skills. Others include scripts that 
 
 ### Requires local tool/runtime setup
 - `pi-extension` — Pi Coding Agent installation and docs/examples for your installed version
+- `pi-web-ui-internal-api-orchestration`, `long-horizon-waiting-strategies`, `orchestrated-child-worker` — a running Pi Web UI instance with its local Internal API socket/token; `pi-orch` optional but recommended (see the [pack README](./packs/pi-web-ui-orchestration-pack/README.md))
 - `claude-p`, `claude-channels` — Claude Code CLI installation and local auth state
 - `opencode-plugin` — OpenCode installation and plugin runtime
 - `agy-p` — Antigravity CLI installation and local auth state

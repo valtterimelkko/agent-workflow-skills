@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pi Web UI Internal API Orchestration"
+  short_description: "Discover, dispatch, monitor, and clean up real Pi Web UI agent sessions from anywhere — voice included."
+  default_prompt: "Use $pi-web-ui-internal-api-orchestration to safely discover live capabilities, choose an exact policy route, dispatch agent sessions, monitor their evidence, and clean up what you own."
