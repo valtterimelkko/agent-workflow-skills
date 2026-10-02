@@ -126,7 +126,9 @@ echo "GAVE UP after 7h; last state: <...>"
 Launch it with `run_in_background: true` and **return your turn immediately**. For an
 Internal API child, the terminal condition is best a held
 `GET /api/v1/watches/wait?ids=<watchId>&timeout=300000&cursor=<c>` on a pure-observer watch
-(advance the cursor every round) or the `?sinceIndex=N` poll.
+(register it with `pi-orch watch <child> register --conditions agent_end --id-only`, which prints the
+id; advance the cursor every round) or the `?sinceIndex=N` poll. The registered watch is not a wake
+by itself: the exiting watcher is.
 
 Properties: it survives multi-hour interruptions of the parent's usage window (observed),
 and it is cheaply re-armable — chain watchers across a long job. A capped watcher polling the child's `busy` flag and its review file can wake the parent when

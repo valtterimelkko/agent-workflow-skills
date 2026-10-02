@@ -114,8 +114,8 @@ you are not going to wake up.
    in-harness relay or exiting background task whose exit wakes this parent
    instead. A server-side
    `onFire` alone **cannot reach you** — including one armed on
-   your behalf by a repo script or curl command; that serves audit/durability,
-   not your wake. Verify by reading the tool result back, not from memory.
+   your behalf by a repo script, curl command or `pi-orch watch register`; that serves
+   audit/durability, not your wake. Verify by reading the tool result back, not from memory.
 3. **Exactly one appropriate live backstop exists for this window** (selection
    below). Record its id/deadline and check its returned state.
 4. **Both mechanisms verified**, then end your turn. On wake, run the On-wake
@@ -295,14 +295,21 @@ instantly and wakes you with the exit code and output tail. Pair a self-cancelli
 backstop with must-not-miss completions. Reach for a background *subagent* only when the
 waiter itself needs model reasoning mid-wait.
 
-**`pi-orch wait` is a command-shaped wait.** It blocks in the server's watch long poll,
-never polls and never sleeps. Run it as a background task (a background shell on Pi, a
-background Bash task on Claude Code) with a result file and a `--deadline` sized to the
-window. Its exit code tells you the outcome (`0` settled, `3` deadline: re-wait, `6`
-never started, `16` bad target, `17` goal cleared). Do not hold your own turn open in a
-foreground `pi-orch wait` for more than about ten minutes: one child blocked its turn for
-35 minutes that way. For multi-hour windows, keep the watch-wake primary and the
-backstop; the client does not replace them.
+**`pi-orch` and waiting** (verbs and exit codes in
+`pi-web-ui-internal-api-orchestration/references/pi-orch.md`). One pattern per dispatch:
+
+- **Idle (default for an interactive parent):** register the wake with the `watch-wake` tool plus
+  `wake_deadline` and **end your turn**. Never hold a foreground `pi-orch wait`: one child blocked a
+  turn for 35 minutes that way.
+- **`pi-orch watch <sid> register|list|delete`** never waits. `register` creates a server-side
+  pure-observer watch (no `onFire`) and prints its id: **not a wake by itself**, and on a Claude Code
+  parent a foreign watch makes the mod refuse to register its own. Use it only where something else
+  delivers (an exiting background watcher or `wait-watch.sh` polling the printed id, a bare parent
+  without the mod) and for `list`/`delete` (generation-safe: a replaced watch is refused, exit 19).
+- **In-turn (scripts, batch parents):** `pi-orch wait <sid>` blocks in the server's long poll, never
+  polls, exits with the outcome (`3` deadline: re-wait; `5` restart; `6` never started; `17` goal
+  cleared). A backgrounded `wait` with a result file is a valid exiting-task fallback; multi-hour
+  windows keep the watch-wake primary and the backstop.
 
 ## Combining primary wake and an appropriate backstop
 
@@ -340,7 +347,9 @@ channel.
 1. Identify what fired: sentinel (timer expired) vs primary wake (something
    changed). Both mean "go look", not "work is done".
 2. Reconcile every outstanding work item against durable evidence (receipts,
-   checkpoint files, watch `wakeAttempts[]`) — not from the wake message text. A
+   checkpoint files, watch `wakeAttempts[]`) — not from the wake message text. A Claude Code
+   parent finds its children by owner id: `pi-orch status --owner <id>` (best-effort, from the
+   per-host spawn ledger; children of other clients never appear). A
    coalesced "N wakes arrived together" is one reconcile-all wake. A wake **held while
    you were busy** may describe an event you already handled: compare the run receipt's
    times with your checkpoint, and if nothing is new, go idle again.
@@ -487,8 +496,9 @@ needs — which for Claude Code is the `watch-wake` mod, or the exiting
 background watcher where mods are unavailable (`references/claude-code-watch-wake-and-background-watcher.md`).
 
 Concretely, on the Pi Web UI Internal API: a bare Claude CLI cannot be an
-`onFire` target, but it can `POST /sessions/:id/watch` with **no** `onFire` (a
-pure observer) and poll `GET /sessions/:id/watch`. That yields the server's own
+`onFire` target, but it can register a watch with **no** `onFire` (a pure observer: the
+`watch-wake` mod does it for you; `pi-orch watch register` or `POST /sessions/:id/watch`
+otherwise) and poll `GET /sessions/:id/watch`. That yields the server's own
 `agent_end` evaluation and its durable ledger, with no heuristic in the path.
 
 This is not hypothetical tidiness: orchestrators have read "bare Claude CLI has
@@ -563,7 +573,9 @@ with reason `"supervising <child>"` — never via the question exit
 (a needs-user-input marker), which sets `pendingQuestion` so the wake itself
 auto-resumes the goal — and resume only when fully settled. Budgets are real
 outcomes (exhausted auto-continue or turn budget ends as
-`goal_end {failed, budget}` — re-plan, don't poll through).
+`goal_end {failed, budget}` — re-plan, don't poll through). Set the goal's token budget
+explicitly for a child that may run long (the 5,000,000 default pauses it mid-run;
+`pi-orch spawn --goal-budget-tokens`), and keep the goal objective to one line.
 
 Two goal-child edges observed in practice (detail in
 `pi-web-ui-internal-api-orchestration/references/goals.md`):
