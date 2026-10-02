@@ -7,7 +7,7 @@ templates and sequences that make a multi-lane programme repeatable. Copy, trim 
 and keep the section names so another agent can find things.
 
 Contents: operations directory · live checkpoint · common brief · lane brief · correction
-brief · reviewer brief · parent verification checklist · worktrees and shared dependencies ·
+brief · reviewer brief · reviewer live re-run lane · parent verification checklist · worktrees and shared dependencies ·
 merge and integration · deploy and restart runbook · wave close-out.
 
 ## Operations directory
@@ -43,8 +43,10 @@ Socket <path>; token <path>.
 - <date> "<authorisation text>" — scope: <what it covers>. Protocol still: <the gates that still apply>.
 
 ## Lanes
-| lane | session | run | lease | watch | worktree(s) | status |
-|---|---|---|---|---|---|---|
+| lane | session | owner id | lease | watch | worktree(s) | route | status |
+|---|---|---|---|---|---|---|---|
+
+Dispatch every lane through `pi-orch` (`pi-orch.md`), one owner id per lane: `orch-<programme>-<parentShort8>-<lane>`. Add the re-run lane (below) to this table when you plan the wave, not after it.
 
 Hand-back files: <ops dir>/<lane>/{NN-question,NN-blocked,01-design,complete}.md; answers NN-answer.md.
 Briefs: COMMON-BRIEF-<wave>.md + <lane>/brief.md. Reviewer brief: reviews/REVIEWER-BRIEF-<wave>.md.
@@ -97,13 +99,35 @@ the `orchestrated-child-worker` skill.
 - Never restart, stop or reconfigure production; never validate against production.
   Live validation uses disposable servers with <isolation rules>. See the [Pi Web UI live-validation
   guide](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/LIVE-VALIDATION.md) for repository-specific checks.
+- **Main checkouts are binding no-go zones** (a child that runs `git checkout <branch>` and a
+  build in the main checkout rebuilds the output production boots from): never `cd` into a
+  main checkout, pass it as `--prefix`/cwd, or run git-write, npm, build or test commands
+  there; every command uses the worktree path. Before hand-back run read-only `git -C <main>
+  status --porcelain` and `rev-parse --abbrev-ref HEAD` for each repository the lane touches
+  and put base branch + empty status in `complete.md`.
+- **Disposable servers must not inherit production placement** (a disposable server started
+  from a child's shell can resolve production's tools root, and its startup sweep can kill
+  other sessions' commands). Start every one with the inherited placement and tool-root
+  variables removed (`env -u <NAME> …` for each; list them with `env | grep '^PI_TOOLS_'`
+  in Pi Web UI builds that have them); a proof that needs placement uses its own delegated
+  unit and asserts by script that the resolved root is not production's. Keep the rule in
+  the brief even where the launcher strips these itself: other harnesses and older builds
+  do not.
+- **Heavy commands run capped, one at a time**: `systemd-run --scope --quiet --collect -p
+  MemoryMax=<cap> [-p CPUQuota=400%] -- nice -n 10 <cmd>` (`nice -n 10` goes inside the scope;
+  `-p Nice=10` is rejected). A proof that allocates memory on purpose also self-caps, runs
+  under a hard `MemoryMax`, and creates cgroups only inside a subtree it made and read back
+  (an escaped proof that grew to tens of GB once led the host OOM killer to take production
+  down).
 - Credentials in a disposable agent dir: copy only the approved provider entry. A
   `models.json` holding `apiKey` entries is a credential copy too; strip unapproved
   providers. Name the child route in any inner brief, assert the served model by script,
-  and delete every copy when done. A full copy must never allow a child to select a route
-  excluded by the programme.
-- Long commands run in the background with a result file; never block your own turn
-  in one foreground command for more than about ten minutes.
+  and delete every copy when done, stating in `complete.md` the command that confirms none
+  remain (`find <run dirs> -name auth.json -o -name models.json`). A full copy must never
+  allow a child to select a route excluded by the programme.
+- Long commands (suites, live proofs) run in the **foreground with a timeout**, never as a
+  background job you then end your turn on (the parent reads that as a hand-back). If you
+  must stop early, start the final message with `NOT FINISHED:` and name what still runs.
 - Preserve the raw evidence a claim rests on (transcripts, receipts) before any cleanup
   deletes it, redacted, in the coordination dir, so a reviewer can recount.
 - Strict TDD: record RED, then GREEN.
@@ -116,7 +140,14 @@ the `orchestrated-child-worker` skill.
 ## <Lesson carried> (e.g. build freshness: rebuild in your own worktree before any live run and record the build commit)
 
 ## Gates to run before hand-back
-<exact commands>. Record each command and exit code.
+<exact commands>. Record each command and exit code. Changed-file gates take the lane's
+base explicitly (pi-web-ui: `npm run lint:ratchet -- --base <lane base commit>`): the
+default base can pass locally and fail in CI.
+
+## Goal marker (exact form)
+Under a goal, the final message carries the line `Status: GOAL_ACHIEVED` on its own line,
+after `complete.md` is written (a bare `GOAL_ACHIEVED` is ignored and the engine keeps
+nudging); `Status: NEEDS_USER_INPUT` is not used for hand-back (use the hand-back protocol).
 
 ## Hand-back protocol (the parent is woken by your turn ending)
 - Decision needed: `NN-question.md` (question, options, your recommendation), then end your turn.
@@ -145,6 +176,9 @@ You never sign off your own work.
 
 The dispatch prompt itself stays short: the `orchestrated-child-worker` directive (SKILL.md §3), the
 session id, the worktree, and "read `<ops dir>/COMMON-BRIEF-<wave>.md`, then `<lane>/brief.md`".
+A goal objective is **one line** (the goal API rejects newlines) and carries the pointer to
+the brief and the hand-back marker, not the brief itself; arm it with an explicit token
+budget (`--goal-budget-tokens`).
 Briefs live in files; see `orchestrator-governance.md` §7 on keeping permission stories out
 of text sent to children.
 
@@ -207,6 +241,22 @@ Keep one reusable `reviews/REVIEWER-BRIEF-<wave>.md` (the five checks and verdic
 diff range, focus areas, output path. Tell the reviewer that the numbered answer and
 correction files **amend** the frozen brief — otherwise it judges against stale criteria.
 
+## Reviewer live re-run lane (a named lane in every wave template)
+
+Add it when you write the wave, with its own brief and row. A fresh reviewer (not an
+executor of the steps; on a different model family from the implementers) re-runs the
+wave's behavioural claims live, read-only on the code:
+
+- a disposable server built from the integrated base, in the isolation the common brief
+  defines (placement variables removed, capped scope, isolated agent dir, real extension
+  copies, approved cheap route, own credential copy deleted afterwards);
+- one **arm per shipped claim**, each with its pass rule and a positive control fixed before
+  running;
+- the report states build commit, peak concurrent active turns and sample counts;
+- a failing arm comes back with a reproduction and becomes a named correction lane.
+
+The wave is **not shipped** until this lane has run.
+
 ## Parent verification checklist (before the reviewer, and before acceptance)
 
 - Read the diff yourself with `git diff --check` and a plain `git diff` — **not `-w`**, which
@@ -218,6 +268,7 @@ correction files **amend** the frozen brief — otherwise it judges against stal
   child rebuilt in its worktree and recorded the build commit.
 - Scope: files outside owned paths, the plan file, shared dependencies, production paths.
 - Write your own probe for the claimed behaviour; a passing child verifier is necessary, not sufficient.
+- A defect you find goes back to the implementer **before** any reviewer tokens are spent.
 - Only then spend reviewer tokens.
 
 ## Worktrees and shared dependencies
@@ -256,6 +307,10 @@ ln -s <repo-root>/node_modules <worktree-path>/node_modules   # and each workspa
    and client suites too, not only the server unit suite.
 4. **Run the integrated gates once after the last merge**, in the background, output to a
    file. Triage a failure by running that test alone and checking whether the wave touched it.
+   **Run changed-file gates against the previous base, not the default.** On a merge commit a
+   changed-files check with its default base sees no changed files and passes falsely; for
+   pi-web-ui run `npm run lint:ratchet -- --base <previous base>`. A merge that passes the
+   default local run can go red in CI on a new lint violation.
 5. **Push only the integrated base branch, and only after its gates are green** — never the
    local lane branches. Then update the plan's status sections in the same change.
 
@@ -267,6 +322,14 @@ verbatim in the checkpoint with its scope. A blanket grant does not relax the pr
 1. **Coordination check**: inspect your harness's coordination surface for anyone else
    using the Internal API or service; if none exists, record a one-line task/owned-paths
    note in the hand-back or coordination directory.
+   **Then check the production checkout itself** (read-only): `git -C <checkout> rev-parse
+   --abbrev-ref HEAD` is the base branch, `git -C <checkout> status --porcelain` is empty, and
+   `git -C <checkout> reflog -5 --date=iso` shows only your own merges since the last deploy.
+   A foreign `checkout:` entry means a child worked there; find what it changed (and whether
+   it rebuilt the build output) before you build: if a child checked out its lane branch there,
+   a later `merge` is a silent no-op because HEAD is already the lane branch. Preserve such a
+   state on a local rescue branch (commit it there), then switch back; a forced checkout
+   discards it.
 2. **Deploy dependent artefacts first** (extensions, mods, config the new code needs), with a
    timestamped backup (`deploy-backup-<what>-<utc>/`) and a byte-identity check of the live
    files against the commit you deployed.
@@ -289,6 +352,9 @@ verbatim in the checkpoint with its scope. A blanket grant does not relax the pr
 
 ## Wave close-out
 
+- Confirm the reviewer live re-run lane ran and each arm is accounted for.
+- Re-read every evidence bundle's residual-risk and blind-spot lists; route each hazard into
+  the plan and the defect ledger the same day, with its interim mitigation.
 - `watch_wake_list` (or the server list): cancel each watch, confirm deleted.
 - Release each retention lease you own; confirm 200.
 - Leave children's board entries if they did not.

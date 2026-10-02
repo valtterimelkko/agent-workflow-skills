@@ -19,9 +19,11 @@ admission authority.
 validation runs (`npm run validate:server` / `scripts/validation-server.ts`) can leak background
 processes; once the host task limit is exhausted, the admission controller refuses otherwise-idle
 turns with `ADMISSION_CAPACITY_EXHAUSTED`. Diagnosis: `GET /capacity` reports
-`reason: "pid_pressure"` while sessions and slots look free. Fix: stop only the leaked
-validation-server processes (not the service) with your process supervisor, then re-check
-`/capacity`.
+`reason: "pid_pressure"` while sessions and slots look free. Fix: stop exactly the leaked
+validation-server processes you started (by PID or process group, with your process supervisor;
+never a blanket `pkill` by name, because other agents' disposable servers and proofs share the
+host, and a disposable server started with the production service's inherited placement
+variables can sweep production's tools root), not the service, then re-check `/capacity`.
 
 **Detached dispatch** starts the turn and returns immediately (above).
 
@@ -128,7 +130,7 @@ POST /api/v1/sessions/<CHILD_ID>/watch
   Without the mod nothing can deliver a wake into a bare Claude CLI, so
   `onFire` is unavailable to it. That is a delivery limit, **not** a reason to
   hand-roll your own liveness logic. Register a pure-observer watch on the child
-  (`POST /sessions/:id/watch` with **no** `onFire`), then wait on it with
+  (`pi-orch watch <sid> register --conditions agent_end --id-only`, or `POST /sessions/:id/watch` with **no** `onFire`), then wait on it with
   `GET /api/v1/watches/wait?ids=<watchId>&timeout=300000&cursor=<lastCursor>`
   (contract 1.26.0) — one held request returns the firing the moment it is
   recorded, `204` on timeout, and the returned `nextCursor` makes replays

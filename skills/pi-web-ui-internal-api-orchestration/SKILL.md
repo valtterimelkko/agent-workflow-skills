@@ -58,6 +58,7 @@ situation and skippable outside it. Tier 3 is genuinely optional.
 
 | Reference | Mandatory when… | What it holds |
 |---|---|---|
+| `references/pi-orch.md` | **before your first `pi-orch` call in a run**, and before dispatching a programme through it | verbs and flags, goal budget, owner-id convention, `status --owner`, idle vs in-turn waiting, route caps, exit codes |
 | `references/adoption.md` | **before adopting any session as a child** — registered or native CLI; includes the operator's CLI-exit confirmation gate | discovery, payloads, responses, errors, post-adoption supervision wiring, worked example |
 | `references/claude-code-orchestrator.md` | **MANDATORY when orchestrating from Claude Code** (interactive `claude` CLI, `claude -p`, or a managed Claude session) | Internal API side for Claude parents: which-Claude wake route, dispatch-and-idle with a watch-wake mod, fan-in, `onFire` for managed Claude, Claude-parent routing notes. Wake mechanics, backstops and zero-token discipline: `long-horizon-waiting-strategies/references/claude-code-watch-wake-and-background-watcher.md` |
 | `references/antigravity-orchestrator.md` | **MANDATORY when orchestrating from Antigravity CLI / IDE** | Zero-token reactive waiting protocol, persistent wait-watch helper, no-in-turn-polling invariant, milestone notification standards, post-compaction checkpoint anchor |
@@ -105,35 +106,29 @@ snapshot is stale.
 
 **Preferred: the `pi-orch` client** (https://github.com/valtterimelkko/pi-orch —
 a thin parent client with no runtime dependencies beyond Node). It builds every
-request against a drift-guarded contract snapshot and sends `X-Parent-Session` for
-you (from `PI_ORCH_PARENT_SESSION`, `PI_WEB_UI_SESSION_ID` or `PI_SESSION_ID`, so
-lineage is automatic in a managed session). Its `wait` blocks in the server's long
-poll: it never polls, and it never needs `sleep`. Use `--json` or `--id-only`
-whenever a script captures the output; never parse its human-readable text.
+request against a drift-guarded contract snapshot, sends `X-Parent-Session` for you
+when it knows your session id, and uses documented exit codes. Its `wait` blocks in
+the server's long poll and never polls. Programmes dispatch through it, not through
+hand-written curl scripts. **Read `references/pi-orch.md` before your first call**:
+verbs, goal budget, owner ids, waiting patterns, route caps, exit codes.
 
 ```bash
 SID=$(pi-orch spawn --runtime pi --cwd /work/dir --model-selector <live-selector> \
-      --thinking low --owner <you> --ttl 3600 --id-only)    # + --goal-objective "…" for a goal child
+      --thinking low --owner <you> --ttl 3600 --id-only)    # + --goal-objective "…" --goal-budget-tokens N for a goal child
 RID=$(pi-orch prompt "$SID" --message "…" --id-only)        # detached, idempotency key built in
-pi-orch wait "$SID" --run-id "$RID" --deadline 1800 --json  # detects a live goal and waits for the goal outcome
-pi-orch wait --all "$SID1@$RID1" "$SID2@$RID2" --json       # fan-in in one call (--any: first to settle)
+pi-orch wait "$SID" --run-id "$RID" --deadline 1800 --json  # in-turn wait only; an idle parent registers a watch and ends its turn (§4)
 pi-orch result "$RID" --json                                # final text + parsed completion block
 pi-orch verify "$SID" --run-id "$RID" --since <base> [--rerun "npm test"] --json   # check the block's claims
 pi-orch status --parent <you> --json; pi-orch cleanup "$SID" --lease <id> --owner <you>
 ```
 
-`spawn` and `prompt` add the end-of-task report paragraph (§3) by default
-(`--no-completion-template` to opt out). `verify` is read-only: claimed commits must
-exist in the claimed repo (and be reachable from `--since`), each `filesChanged` path
-needs change evidence (in a claimed commit or dirty in the tree), and a test is
-re-run only when you name the command with `--rerun`. Its verdict is `verified`
-(exit 0), `contradicted` (20) or `unverifiable` (21).
-
-Exit codes are meaningful, for example `3` deadline (re-wait, never re-dispatch),
-`6` `NEVER_STARTED`, `16` unknown or mismatched wait target, `17` goal cleared,
-`18` `CREATE_UNKNOWN` (reconcile with `status --parent`; never blindly re-spawn), and
-`19` watch conflict. `pi-orch` with no arguments prints the usage (so does
-`pi-orch help`). `22` means a goal child never received the report template.
+Rules worth carrying: a goal child that may run long needs `--goal-budget-tokens` (the
+5,000,000 default pauses it mid-run) and a single-line objective; a Claude Code parent
+names its children `orch-<programme>-<parentShort8>-<lane>` because it has no lineage;
+exit `3` is a deadline (re-wait, never re-dispatch), `18` means reconcile with `status`
+before any re-spawn, `25` means the route cap refused the spawn (nothing was created);
+the completion block is a claim, so run `verify` before accepting it. Spread a large
+wave across routes rather than queueing it on one.
 
 **Fallback: raw requests.** Use them for anything the client does not cover
 (adoption, transfers, diagnostics, goal pause and resume), or when `pi-orch` is
@@ -217,6 +212,12 @@ GET $API_BASE/models
   (1.51.0). Treat any `429`/`503` with `Retry-After` as "wait and retry" (a drain ends
   in a restart: re-check `/capabilities` afterwards), and never read the wire
   contract's code list as closed.
+  An `event_loop_lag` refusal usually means the **host** is overloaded (another agent's
+  build or benchmark), not that your request is wrong: `pi-orch` waits out `Retry-After`
+  for you; raw callers must too. Heavy work of your own belongs under `nice` and a capped
+  scope, so it cannot starve the server's single event loop: on systemd,
+  `systemd-run --scope -p CPUQuota=… -p MemoryMax=… -- nice -n 10 <cmd>` (put `nice`
+  inside the scope; `-p Nice=10` is rejected by `systemd-run`).
   Read actual tasks, reservations and the limiting reason—not just the nominal
   turn ceiling. Admission permits are not a complete count of browser/native
   work or autonomous goal continuations; separate request receipts can also
@@ -326,7 +327,8 @@ joins between waves, not inside them. Three rules carry the shape:
   suspect; parallel children only on disjoint owned paths; later phases gated
   on earlier interface stability or another lineage's work landing (postpone
   the seam, don't block); a fresh read-only **reviewer child after each lane** (§3c),
-  not only at the end; code/test/deployment reported separately. Declare
+  not only at the end, and a named **reviewer live re-run lane** before the wave closes;
+  code/test/deployment reported separately. Declare
   dependencies by what a step needs (interface, data, deploy order), and put a
   **design gate** in the brief of any behaviour-critical lane.
 - **Acceptance is a verdict, not a receipt**: the parent independently re-runs
@@ -488,7 +490,9 @@ recurring failure in that audit):
 - **A budget for research children** (time or tool calls), a checkpoint cadence and a
   hand-back milestone — unbounded research children ran for thousands of tool calls.
 - **An end-of-task report block** (contract 1.58.0), so the server captures the child's
-  claims (§6). Paste the paragraph inside this four-backtick fence verbatim:
+  claims (§6). `pi-orch` appends it for you (for a goal child also the `Status:` marker and
+  field-shape instructions); paste it by hand only for raw dispatch, verbatim inside this
+  four-backtick fence:
 
   ````text
   END-OF-TASK REPORT (required): the LAST thing in your final answer must be exactly this kind of fenced block (info string `completion`, JSON body):
@@ -503,9 +507,14 @@ recurring failure in that audit):
   **Completion-block shape** (learned from a live proof where two blocks were rejected or mis-verified): `commands` entries are `{command, exitCode}` objects; `commits` entries are `{sha, repo, subject?}` (sha is 7–64 hex chars; `repo` is an absolute path); `filesChanged` entries are paths **relative to a claimed repo** — coordination or hand-back files outside the work tree are not part of the claim and should be omitted. A malformed block is still parsed to a typed `completionError` (`fieldPath` names the first bad field), so a rejected block costs one reporting follow-up, not a re-run.
 - **Live proofs in the child's own disposable server** copy only the credential of
   the approved route into the isolated agent directory, count `models.json` entries
-  that carry `apiKey` as credential copies, name the child route explicitly in any inner
-  brief, and assert the served model by script. A parent with a full credential copy can
-  silently pick a different model for its children.
+  that carry `apiKey` as credential copies and delete every copy afterwards, name the
+  child route explicitly in any inner brief, and assert the served model by script. A
+  parent with a full credential copy can silently pick a different model for its children.
+- **Host rules the brief must carry** (binding wording in `programme-kit.md`, common
+  brief): disposable servers started without the inherited production placement or
+  tool-root variables; heavy commands in a `systemd-run --scope` with a hard
+  `MemoryMax`; changed-file lint against the lane base; never touch the main checkout.
+  The child-side form is `orchestrated-child-worker` §3 and §7.
 - Templates for all of this: `references/programme-kit.md`.
 
 For a read-only reviewer, replace the owned-paths, exclusions and push sentences with "You are a read-only reviewer: do not edit, commit, stash or push, and leave the tree untouched; numbered answer and correction files amend the brief", and add the verdict format (§3c), to be returned in the review file and the final message. The harness already delivers the identity packet and scope warnings to the child, so the brief need not restate them.
@@ -533,11 +542,11 @@ yours, are polluted by the path taken, while a new session sees only the diff, t
 and the evidence. Run one per lane and again after each correction; it is not only a last wave.
 
 - **Route (a role, not a model):** one of the recommended worker models, on a **different model family from the implementer**, at the highest thinking level it advertises, never a metered provider without direct authorisation, respecting disabled/suspended backends — rules in `references/routing.md` *Reviewer route*. Check provider quota first and confirm `fallbackApplied:false` on create.
-- **Create** with `cwd` = the implementer's worktree and durable retention (`ttlSeconds` sized for the wait, `ownerId:"<prog>-<lane>-reviewer"`), dispatch detached, watch `agent_end` with `max_wakes` headroom (each auto-compaction also fires an `agent_end`).
+- **Create** with `cwd` = the implementer's worktree and durable retention (`ttlSeconds` sized for the wait, `ownerId:"<prog>-<lane>-reviewer"`; a Claude Code parent uses the `orch-<prog>-<parentShort8>-<lane>-reviewer` convention, `references/pi-orch.md`), dispatch detached, watch `agent_end` with `max_wakes` headroom (each auto-compaction also fires an `agent_end`).
 - **Read-only is enforced by the brief only.** Check `git status` is clean afterwards.
 - **The verdict is evidence, not sign-off.** You still re-run gates and adjudicate; a defect goes back to the same implementer as a bounded correction, and the same reviewer closes the previous findings.
 
-Brief contents, the verdict format, the closure loop, its round cap and the compaction gotchas are in `references/multi-phase.md` (Review wave). For several parallel critiques of one draft, use `references/patterns.md` (Reviewer fan-out) instead.
+Cap: one full review, one closure round on the same reviewer, then a final parent-verified correction (no round 3). Brief contents, the verdict format, the closure loop and the compaction gotchas are in `references/multi-phase.md` (Review wave). For several parallel critiques of one draft, use `references/patterns.md` (Reviewer fan-out) instead.
 
 ## 4. Set a long task and walk away
 
@@ -592,7 +601,9 @@ The rules worth carrying in your head:
   concurrent steers are recorded as `steer_pending` suppression. Transient
   delivery failures do not consume budget and get one bounded retry.
 - **Never poll in-turn.** Holding your turn open to watch a child is the failure
-  this whole section exists to remove.
+  this whole section exists to remove. That includes a foreground `pi-orch wait`: it is
+  for scripts and in-turn waits; an idle parent registers a watch and ends its turn
+  (`references/pi-orch.md`, *Waiting*).
 - **`202` is queue acceptance, not delivery.** Never report "notified" from it.
 
 **→ `references/walk-away.md`** has the full detail: retention modes and lease
@@ -611,7 +622,10 @@ must not be derailed; use a plain prompt for bounded single-turn tasks. **Write 
 not the method**: what must be true, the evidence that settles it, where the record lives,
 the invariants. Arm via `POST|GET /api/v1/sessions/:id/goal` or atomically at create; watch
 terminal `goal_end` (filter a reused session's old-goal clear by the exact new objective),
-not per-run `agent_end`. A `start` receipt is **not** completion.
+not per-run `agent_end`. A `start` receipt is **not** completion. The objective must be a
+**single line** (the API rejects newlines), and a goal that may run long needs an explicit
+token budget (`budgetTokens`; `pi-orch --goal-budget-tokens`): the 5,000,000 default pauses
+it mid-run.
 
 **→ `references/goals.md`** — the API, per-runtime honesty matrix, read-back discipline.
 **Read it before arming a goal.**

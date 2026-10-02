@@ -61,8 +61,20 @@ POST /api/v1/sessions/:id/goal {"action":"clear"}
 ```
 
 Create-time `goal: { objective, maxTurns }` can arm a goal atomically with the
-session. Pair long work with an explicitly owned retention lease. Store the
-session id, exact objective, start receipt and verifier with the child brief.
+session. Pair long work with an explicitly owned retention lease.
+
+**Objective and budget rules (both bite real lanes).** The objective must be a **single line**:
+the goal API rejects newlines (`objective must be a single line`), so keep the long text in
+the brief file and point at it. `budgetTokens` is the goal engine's token budget: the server
+default is 5,000,000 and pauses a long goal mid-run (a `pauseReason: "budget"` pause, not a
+failure). Set it explicitly for any child that may run long, sized to the task and the route
+(a long lane on a slower subscription route needed tens of millions); `pi-orch` validates
+1..1,000,000,000 and prints a stderr note when you omit it. Via `pi-orch`:
+`spawn --goal-objective … --goal-budget-tokens N` arms at create;
+`pi-orch goal <sessionId> start --goal-objective … --goal-budget-tokens N` arms a child you
+already created (same completion-template delivery; exit 22 if it is not delivered). Pause,
+resume and clear stay raw API calls. A budget-paused goal needs the budget resolved, not
+repeated resumes. Store the session id, exact objective, start receipt and verifier with the child brief.
 Canonical statuses include running, paused, wrapping_up, suggested, achieved,
 failed, cleared, idle and unknown; capability-gate support per runtime.
 

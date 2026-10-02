@@ -26,8 +26,10 @@ credentials out of everything you publish.
   Antigravity, or the gated Command Code path).
 - **Optional but recommended: [`pi-orch`](https://github.com/valtterimelkko/pi-orch)**
   — a thin parent client for the common loop (`spawn`, `prompt`, `wait`,
-  `result`, `verify`, `cleanup`, `status`). It removes hand-written curl and
-  `sleep` loops; the raw Internal API is fully documented if you prefer it.
+  `result`, `verify`, `cleanup`, `status`, plus `goal` and `watch`). It removes
+  hand-written curl and `sleep` loops; the raw Internal API is fully documented
+  if you prefer it. The orchestration skill's `references/pi-orch.md` covers the
+  verbs, goal budgets, owner ids, waiting patterns, route caps and exit codes.
 - No Agent OS, no cloud account, no orchestration server, and no extra
   infrastructure.
 

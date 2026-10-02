@@ -124,18 +124,26 @@ available children.
    session** — no implementation ownership, no self-sign-off, separate from every
    implementation child — reviews each lane after the implementer hands back and
    again after each correction. Full pattern in *The reviewer child* below.
-7. **Review moments and interim waves.** When a review (yours or the owner's) finds that
+7. **Reviewer live re-run lane (named, before the wave closes).** Code reviews and focused
+   tests are not a live proof. The wave template carries a named lane in which a fresh
+   reviewer, not an executor of the steps, re-runs the wave's behavioural claims live: a
+   disposable server built from the integrated base, real extension copies, the approved
+   cheap route, contained as in the common brief, and a pass rule per arm fixed before
+   running. A failing arm becomes a correction lane. A wave that closes on code reviews
+   and focused tests alone tends to need this lane added afterwards; write it into the
+   wave plan up front, and do not call the wave shipped until it has run.
+8. **Review moments and interim waves.** When a review (yours or the owner's) finds that
    the plan's next wave would build on a defect, insert an **interim remediation wave**
    rather than folding the fixes into the next planned wave. Prefer the cheapest decisive
    proof for each fix (a synthetic or bounded run) over repeating a long validation; keep
    one long run only where nothing cheaper decides. Give the interim wave its own common
    brief and checkpoint, carry the previous wave's lessons at the top, and keep the old
    checkpoint as history. Amend the plan in place.
-8. **New lanes mid-wave.** When a lane's result shows the scope is bigger than planned
+9. **New lanes mid-wave.** When a lane's result shows the scope is bigger than planned
    (the fix works but does not deliver the benefit), open a **new named lane** with its
    own checkpoint row and plan entry rather than stretching the old one. One child may own
    worktrees in two repositories for it; list both.
-9. **Report code/test/deployment states separately.** Deployment stays
+10. **Report code/test/deployment states separately.** Deployment stays
    separately permission-gated; execution approval never implies it.
 
 ## The reviewer child
@@ -150,12 +158,12 @@ success, a confinement hole, and eviction orphaning running children.
 
 **Sequence per lane:**
 1. Implementer hands back (`complete.md` plus evidence bundle).
-2. **You** read the diff and re-run the gates first; send any parent-found correction before spending reviewer tokens.
-3. Create a **fresh** reviewer (route: `routing.md` → *Reviewer route*) and dispatch the review. Do not reuse the implementer, and do not reuse one reviewer across unrelated lanes.
+2. **You** read the diff and re-run the gates first; a defect you find goes back to the implementer as a correction **before** you spend reviewer tokens (a reviewer's time is for what you could not find).
+3. Create a **fresh** reviewer per lane, on a **different model family** from the implementer (route: `routing.md` → *Reviewer route*), and dispatch the review. Do not reuse the implementer, and do not reuse one reviewer across unrelated lanes. A closure round goes to the **same** reviewer session.
 4. Adjudicate the verdict yourself (below). Accept, or send one correction, then a closure review.
 
 **Create and dispatch:**
-- `POST /sessions` `{runtime:<the route's runtime>, model:<exact selector>, thinkingLevel:<highest advertised, e.g. "max">, cwd:<the implementer's worktree>, retention:{mode:"durable", ttlSeconds:<window+headroom>, ownerId:"<prog>-<lane>-reviewer"}}`; verify `fallbackApplied:false` and the effective model (`sessions.md`).
+- `POST /sessions` `{runtime:<the route's runtime>, model:<exact selector>, thinkingLevel:<highest advertised, e.g. "max">, cwd:<the implementer's worktree>, retention:{mode:"durable", ttlSeconds:<window+headroom>, ownerId:"<prog>-<lane>-reviewer"}}` (a Claude Code parent uses the `orch-<prog>-<parentShort8>-<lane>-reviewer` convention, `pi-orch.md`); verify `fallbackApplied:false` and the effective model (`sessions.md`).
 - The prompt carries the `orchestrated-child-worker` directive (SKILL.md §3), the role line "you are a read-only reviewer", and the verdict format. Dispatch detached (`verbosity:"answers"`, `detach:true`, an `idempotencyKey`) and save the request and receipt.
 - Keep a reusable **reviewer brief file** and a short per-lane prompt (lane, worktree, branch, diff range, focus areas). Tell the reviewer that numbered `NN-answer.md` / `NN-correction.md` files amend the frozen brief, or it judges against stale criteria. Inputs the reviewer reads: the frozen lane brief plus numbered amendments, `complete.md` and the evidence bundle, the plan section, and `git diff <base>...HEAD`.
 - Ask for the deliverable as a **file** (`reviews/<lane>-review.md`) and end the turn. Read-only is enforced by the brief alone, so check `git status` is clean afterwards.
@@ -176,7 +184,7 @@ COMMANDS RUN: command → exit code
 1. Write an "independent review + parent adjudication" note: each finding confirmed, disputed, or already fixed, with your own RED evidence for the ones you uphold.
 2. Send the upheld findings to the **same implementer** as one bounded, numbered correction (`NN-correction.md`, TDD, RED evidence). Re-verify yourself.
 3. Send a closure prompt to the **same reviewer session** listing the earlier findings as CLOSED or OPEN with evidence, and ask it to look only at the delta.
-4. **Cap at 2–3 rounds.** Mark the last correction FINAL, verified by you only ("no round 4"); recurring bounded-work findings can otherwise loop forever.
+4. **Cap at two reviewer rounds** (the full review, then one closure round on the same reviewer session; in a closure round raise only a blocker or major as new). Anything still open after that goes back as one correction marked **FINAL**, verified by you only ("no round 3"); recurring bounded-work findings can otherwise loop forever.
 
 **Gotchas seen in practice:**
 - **Compaction aborts the first turn.** On a large diff the reviewer crosses the auto-compaction threshold (~75% of context on Pi, `auto-compact-75`) and its turn ends silently as aborted; it resumes by itself. If that happened and the file is missing, **do not re-prompt**: wait for the resumed `agent_end` (25 min backstop). Every wake, including each compaction's `agent_end`, spends `max_wakes`.
@@ -246,6 +254,11 @@ For several parallel critiques of one draft (a document or plan, not a lane of c
 - **Taking over from a dead or compacted parent**: recover the old session's record with your harness's own history tools, read the checkpoint and the strategy file, check live state yourself, then act. Never resume from memory of the plan.
 - **Log platform defects into the plan.** A defect you find while orchestrating (not in any
   lane's scope) becomes a finding recorded at the right plan step, not an off-plan fix.
+  **Route a hazard found in any evidence bundle the same day**: into the plan (a new named
+  lane or step) and the defect ledger, with the mitigation in force until it ships. A
+  bundle that records, say, a disposable server sweeping production's tools root can sit
+  unowned for a whole wave until a reviewer is about to start its own servers. Read each
+  handed-back bundle's residual-risk and blind-spot lists for exactly this.
 - **Refresh shared guidance at its actual phase.** Other agents may have moved
   a skill/document HEAD since planning. Read current files, intervening history
   and active ownership; merge the new learning rather than applying stale text.

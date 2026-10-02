@@ -23,15 +23,25 @@ a turn, name the tool call that starts your next one.
 ## 2. Bare CLI: dispatch-and-idle
 
 ```text
-1. Discover capabilities, capacity and models; check the provider's remaining quota in its own dashboard or CLI; pick the route (routing.md).
-2. POST /sessions  (single create, durable retention sized for the window, your ownerId) -> sessionId, leaseId
+1. Discover capabilities, capacity and models (`pi-orch capabilities|capacity|models`); check the provider's remaining quota in its own dashboard or CLI; pick the route (routing.md).
+2. pi-orch spawn --runtime pi --cwd <worktree> --model-selector <sel> --thinking <lvl> \
+     --owner orch-<programme>-<parentShort8>-<lane> --ttl <window+headroom> [goal flags] --id-only
+     -> sessionId. Goal child that may run long: --goal-objective "<one line>" --goal-budget-tokens <N>
 3. Use a watch-wake extension/mod for your harness to register a watch on `<child>`
      **before dispatch**: conditions=[{"id":"done","type":"event_type","eventType":"agent_end"}]
      and message="Child {{sessionId}} fired {{conditionId}} at {{firedAt}} — reconcile it."
-4. POST /sessions/<id>/prompt {"verbosity":"answers","detach":true,...}                  -> runId
+4. pi-orch prompt <child> --message "…" --id-only                                         -> runId
 5. Arm the watch-wake extension/mod's model-free deadline (window + headroom)
 6. STATE file + milestone notification if warranted, then END THE TURN.
 ```
+
+**Do not hold `pi-orch wait` in your turn** (it blocks the turn; it is for scripts and in-turn
+waits), and do not register the child's watch with `pi-orch watch register` as your wake: that
+creates a server-side watch with no delivery to a bare CLI, and the mod then refuses to
+register over a foreign watch. The mod's tool is the registration. A Claude Code parent is not
+a Pi Web UI session, so its children carry no parent lineage: the `--owner` id above is how
+`pi-orch status --owner <id>` finds them and how they are counted (`pi-orch.md`). Raw `POST /sessions` remains the
+fallback for what `pi-orch` does not cover.
 
 On wake: reconcile **every** owned child against durable evidence (`evidence.md`), cancel
 the deadline by its exact id once the window is settled, cancel the watch-wake registration
