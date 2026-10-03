@@ -689,20 +689,22 @@ disconnect-prone work, the receipt is the truth.
     names which cap. Split the task, or ask for files instead of inline output.
   - `interrupted` with `SERVER_RESTART`: a deploy cut the run off. The watch fires with
     `interruptedByRestart: true`, and receipt-less goal or extension turns carry
-    `runId: "busy-<sessionId>"` (1.52.0). On contract ≥ 1.60.0 a **Pi goal child** does not
-    need you for a transient stop: the server continues it once (at boot after a restart,
-    or live on a provider abort) — a `goal_state` with
-    `status: "running"` + `interruption.autoContinued: true` — progress, never a `goal_end` —
-    and only a stop it does NOT continue surfaces as `goal_state` `paused` +
-    `pausedReason: "interrupted"` with the cause (`restart_interruption`, `rehydrate_pause`,
-    `provider_abort`, `second_transient`, `unsupported_runtime`, `continue_failed`, …).
-    Resume that visible stop (`POST /goal {"action":"resume"}`) or re-dispatch; every
-    non-Pi goal still needs the old resume-or-re-dispatch move. On older servers, resume
-    or re-dispatch after the restart, as before. Watch forms: `dataMatch
-    {"interruption.autoContinued": true}` sees continues; `dataMatch
-    {"status":"paused","pausedReason":"interrupted"}` sees stops (both plus your objective
-    filter); `pi-orch wait` already registers the continue condition, counts continues into
-    `autoContinues` and settles a visible stop as exit 5 with the cause and a note.
+    `runId: "busy-<sessionId>"` (1.52.0). On contract ≥ 1.60.0 a **Pi goal child** cut off
+    by a RESTART interruption does not need you: the server continues it once at boot — a
+    `goal_state` with `status: "running"` + top-level `autoContinued: true`, progress,
+    never a `goal_end` — and only a stop it could NOT continue surfaces as `goal_state`
+    `paused` + `pausedReason: "interrupted"` with the cause — exactly one of:
+    `restart_interruption`/`rehydrate_pause` that could not be continued,
+    `second_transient`, `continue_failed`, `unsupported_runtime` (non-Pi goals, boot sweep
+    only). A provider-aborted goal is NOT continued: it ends exactly as before wave K (a
+    failed `goal_end`) and needs you as it always did. Resume a visible stop (`POST /goal
+    {"action":"resume"}`) or re-dispatch; every non-Pi goal still needs the old
+    resume-or-re-dispatch move. On older servers, resume or re-dispatch after the
+    restart, as before. Watch forms: `dataMatch {"autoContinued": true}` sees continues;
+    `dataMatch {"status":"paused","pausedReason":"interrupted"}` sees stops (both plus
+    your objective filter); `pi-orch wait` already registers the continue condition,
+    counts continues into `autoContinues` and settles a visible stop as exit 5 with the
+    cause and a note.
 
 **Completion blocks (1.58.0).** A child that ends its final answer with a
 `pi-completion/v1` block (see §3's brief list) gets it parsed server-side. The receipt

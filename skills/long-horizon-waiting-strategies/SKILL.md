@@ -308,11 +308,12 @@ waiter itself needs model reasoning mid-wait.
   without the mod) and for `list`/`delete` (generation-safe: a replaced watch is refused, exit 19).
 - **In-turn (scripts, batch parents):** `pi-orch wait <sid>` blocks in the server's long poll, never
   polls, exits with the outcome (`3` deadline: re-wait; `6` never started; `17` goal
-  cleared). On a goal child with contract ≥ 1.60.0 a server auto-continue of a transient
-  stop is progress — the wait counts it (`autoContinues` in the JSON) and keeps going —
-  and a visible stop settles `5` with the cause and a resume-or-re-dispatch note. A
-  backgrounded `wait` with a result file is a valid exiting-task fallback; multi-hour
-  windows keep the watch-wake primary and the backstop.
+  cleared). On a goal child with contract ≥ 1.60.0 a server auto-continue of a restart
+  interruption is progress — the wait counts it (`autoContinues` in the JSON) and keeps
+  going — and a visible stop settles `5` with the cause and a resume-or-re-dispatch note
+  (provider-aborted goals end as before: a failed `goal_end`). A backgrounded `wait` with
+  a result file is a valid exiting-task fallback; multi-hour windows keep the watch-wake
+  primary and the backstop.
 
 ## Combining primary wake and an appropriate backstop
 
@@ -589,11 +590,12 @@ Two goal-child edges observed in practice (detail in
   the hand-back file. Let the window's backstop catch a quiet finish.
 - **A deploy is a goal-child event.** On contract ≥ 1.60.0 a Pi goal child cut off by a
   restart continues ONCE on its own at boot: you are woken by its progress
-  (`goal_state` + `interruption.autoContinued`), not by a false end, and only a stop the
-  server did NOT continue arrives as `goal_state` `paused` + `pausedReason:
+  (`goal_state` + top-level `autoContinued`), not by a false end, and only a stop the
+  server could NOT continue arrives as `goal_state` `paused` + `pausedReason:
   "interrupted"` — resume (`POST /goal {"action":"resume"}`) or re-dispatch that one.
-  Every non-Pi goal, and every server older than 1.60.0, still needs the old move: a
-  cut-off child fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0),
+  Provider-aborted goals are NOT continued: they end as before wave K (a failed
+  `goal_end`). Every non-Pi goal, and every server older than 1.60.0, still needs the old
+  move: a cut-off child fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0),
   and on older servers it dies silently, so pause goal children before such a restart;
   resume or re-dispatch after reconciling.
 
