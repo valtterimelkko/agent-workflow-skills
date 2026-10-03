@@ -12,11 +12,11 @@
 | `spawn --runtime rt --cwd dir` | create a child: `--model-selector SEL`, `--thinking L`, `--owner ID --ttl S [--label L]` (durable retention), goal flags, `--preflight-path/--preflight-tool`, `--route-limit 'SEL=N'`, `--wait-for-slot S` |
 | `goal <sessionId> start --goal-objective "…"` | arm a goal on an already-created child, with the same `--goal-max-turns`, `--goal-verify`, `--goal-budget-tokens` flags and the same completion-template delivery as `spawn` (exit 22 if the template is not delivered). Arms only; pause, resume and clear stay raw API calls |
 | `prompt <sessionId> --message "…"` | detached dispatch with an idempotency key; `--mode prompt\|follow_up\|steer`; adds the completion instruction unless `--no-completion-template` |
-| `wait <sessionId>` / `wait --all\|--any id[@runId] …` | watch-backed long poll; settles on the run or, for a goal child, the goal outcome (pass `--objective` or let it read the goal projection). `--deadline S` (default 1800) |
+| `wait <sessionId>` / `wait --all\|--any id[@runId] …` | watch-backed long poll; settles on the run or, for a goal child, the goal outcome (pass `--objective` or let it read the goal projection). On contract ≥ 1.60.0 an auto-continue of a transiently stopped Pi goal child is progress: the wait keeps going and the JSON reports `"autoContinues": <n>`; a visible stop (`paused` + `pausedReason: "interrupted"`) settles exit 5 with `interruption.cause`/`continueCount` in the JSON and a resume-or-re-dispatch note. `--deadline S` (default 1800) |
 | `watch <sessionId> register\|list\|delete` | register a server watch (`--conditions agent_end,goal_end,paused,question:TEXT,deadline:S`, `--label`, `--pin`, `--fire-if-settled`), read it back, delete it. Never waits |
 | `result <runId>` | final text, parsed `completion` block, `outputClass` (`command` for a slash-command return such as a `/goal` arm, `final_text`, `no_text`) |
 | `verify <sessionId> [--run-id] [--since ref] [--rerun "cmd"]` | read-only check of the completion claims: verdict `verified` (exit 0), `contradicted` (20), `unverifiable` (21) |
-| `status [--parent id \| --owner id \| <sessionId>]` | children: busy, goal state, last run |
+| `status [--parent id \| --owner id \| <sessionId>]` | children: busy, goal state (interruption facts — cause, continueCount, autoContinued — when the server holds them), last run |
 | `cleanup <sessionId> [--lease id --owner id] [--watch id]` | release the owned lease, then delete |
 
 Unknown flags are a usage error (exit 2, before any request): a typo cannot silently change what a child receives. `wait --slice` is a deprecated no-op.
@@ -52,7 +52,7 @@ A Claude Code parent is not a Pi Web UI session, so its children carry no `paren
 
 ## Exit codes to branch on
 
-`0` ok · `2` usage (bad verb or flag) · `3` deadline (still working: re-wait) · `5` interrupted by a restart or drain · `6` never started · `16` wait target not found · `17` goal cleared · `18` create unknown (the session may exist: reconcile with `status`, never blindly re-spawn) · `19` watch conflict or refused delete · `20`/`21` verify contradicted/unverifiable · `22` goal template not delivered · `25` route limit. Full table in the pi-orch README.
+`0` ok · `2` usage (bad verb or flag) · `3` deadline (still working: re-wait) · `5` interrupted — a visible stop the server did not continue (cause + continueCount + a resume-or-re-dispatch note in the JSON), or a run the restart reconciliation cut off · `6` never started · `16` wait target not found · `17` goal cleared · `18` create unknown (the session may exist: reconcile with `status`, never blindly re-spawn) · `19` watch conflict or refused delete · `20`/`21` verify contradicted/unverifiable · `22` goal template not delivered · `25` route limit. Full table in the pi-orch README.
 
 ## Receipts and claims
 

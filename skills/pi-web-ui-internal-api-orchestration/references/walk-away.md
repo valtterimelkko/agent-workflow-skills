@@ -38,7 +38,11 @@ over `agent_end` for goal-driven children: one wake at the *outcome* instead of
 one per continuation turn. Combine with retention as below; on Claude, budget
 exhaustion of the auto-continue loop also ends as `goal_end {failed, budget}` —
 a real outcome, not silence. Poll `GET /sessions/:id/goal` when you need
-progress between events.
+progress between events. On contract ≥ 1.60.0 a walking-away parent of a **Pi**
+goal child can also leave restarts to the server: a transient stop continues once
+by itself (`goal_state` + `interruption.autoContinued: true`, never a `goal_end`),
+and only a visible stop arrives as `goal_state` `paused` + `pausedReason:
+"interrupted"` — watch forms and the parent's queue in `goals.md` § Wave K.
 
 **If the PARENT runs under a goal (Pi coding agent only):** do independent work
 while it remains; pause before actually idling — `goal` tool, action `pause`, reason `"supervising

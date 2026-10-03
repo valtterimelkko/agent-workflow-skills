@@ -178,8 +178,36 @@ an owned watch for a new phase; do not refresh a live watch merely to check it.
 - **Pausing for a production restart.** On a server older than contract 1.52.0 the
   drain cannot see goal continuation turns. `{"action":"pause"}` before the restart and
   `{"action":"resume"}` after it keep the child's work (the goal stays on disk). On
-  1.52.0+ the drain waits for them, and a cut-off turn fires the goal watch with
-  `interruptedByRestart`.
+  1.52.0–1.59.x the drain waits for them, and a cut-off turn fires the goal watch with
+  `interruptedByRestart` — resume or re-dispatch after reconciling.
+
+## Wave K: the server continues transient stops (contract ≥ 1.60.0)
+
+On 1.60.0+ a **Pi** goal child whose run was cut off by a TRANSIENT stop — a restart or
+drain interruption, a boot orphan, a provider abort on positive provider evidence
+(overload, 429, 5xx) — is continued ONCE by the server itself, through the normal prompt
+path, with a note naming the cause and the tool call that was in flight. You do nothing:
+
+- the continue emits `goal_state` with `status: "running"` and
+  `interruption.autoContinued: true` (plus `cause`, `continueCount`, `continueNote`,
+  `inFlightToolCall`) — **progress, never a `goal_end`**; the restart reconciliation
+  suppresses its synthetic `goal_end` for a continued child, so the parent is woken once,
+  at the real end;
+- a stop the server does NOT continue — a second transient fault, an abort without
+  positive provider evidence (a bare `aborted` is ambiguous: user, parent and browser
+  stop look identical), a budget or turn limit, a question pause, `unsupported_runtime`
+  (every non-Pi goal), or a failed continue — surfaces at once as `goal_state` with
+  `status: "paused"`, `pausedReason: "interrupted"` and the same `interruption` object;
+  the projection on `GET /sessions/:id` carries it too. THAT is the parent's queue:
+  `POST /goal {"action":"resume"}` (works on the overlay) or re-dispatch.
+
+Watch forms (add your objective filter, as always):
+`dataMatch {"interruption.autoContinued": true}` → continues;
+`dataMatch {"status":"paused","pausedReason":"interrupted"}` → visible stops.
+`pi-orch wait` on a goal child already registers the continue condition, counts
+continues into `autoContinues` in its JSON, and settles a visible stop as exit 5 with
+the cause, the continueCount and a resume-or-re-dispatch note; `pi-orch status` shows
+the same interruption facts.
 
 ## Parent goal lifecycle (Pi parent only)
 

@@ -95,5 +95,8 @@ server-side, it never keeps your turn busy (`walk-away.md`).
 
 Same protocol as every harness (`orchestrator-governance.md` §3–§4): only with the responsible operator's
 authority, through `production:drain-restart` (the drain is the gate; on a server older than
-contract 1.52.0 pause goal-armed children first), never from inside a child. Afterwards watches rehydrate; the mod keeps polling with its
+contract 1.52.0 pause goal-armed children first), never from inside a child. The host's
+command gate additionally refuses the destructive forms (`--force`, `--drain-timeout 0`, a
+bare `systemctl restart|stop`) while real turns are active — its override is `--override`, not
+a workaround. Afterwards watches rehydrate; the mod keeps polling with its
 cursor, and a watch that reloaded `detached` arrives as a stale-notice wake — re-register it.

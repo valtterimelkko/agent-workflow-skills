@@ -307,8 +307,11 @@ waiter itself needs model reasoning mid-wait.
   delivers (an exiting background watcher or `wait-watch.sh` polling the printed id, a bare parent
   without the mod) and for `list`/`delete` (generation-safe: a replaced watch is refused, exit 19).
 - **In-turn (scripts, batch parents):** `pi-orch wait <sid>` blocks in the server's long poll, never
-  polls, exits with the outcome (`3` deadline: re-wait; `5` restart; `6` never started; `17` goal
-  cleared). A backgrounded `wait` with a result file is a valid exiting-task fallback; multi-hour
+  polls, exits with the outcome (`3` deadline: re-wait; `6` never started; `17` goal
+  cleared). On a goal child with contract ≥ 1.60.0 a server auto-continue of a transient
+  stop is progress — the wait counts it (`autoContinues` in the JSON) and keeps going —
+  and a visible stop settles `5` with the cause and a resume-or-re-dispatch note. A
+  backgrounded `wait` with a result file is a valid exiting-task fallback; multi-hour
   windows keep the watch-wake primary and the backstop.
 
 ## Combining primary wake and an appropriate backstop
@@ -584,10 +587,15 @@ Two goal-child edges observed in practice (detail in
   ("run ended in under 15000ms") while the child kept working, and its later
   completion produced no second `goal_end`. On such a wake, read `busy`, commits and
   the hand-back file. Let the window's backstop catch a quiet finish.
-- **A deploy is a goal-child event.** A child cut off by a restart
-  fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0). On older
-  servers it dies silently, so pause goal children before such a restart. Either
-  way, resume or re-dispatch after reconciling.
+- **A deploy is a goal-child event.** On contract ≥ 1.60.0 a Pi goal child cut off by a
+  restart continues ONCE on its own at boot: you are woken by its progress
+  (`goal_state` + `interruption.autoContinued`), not by a false end, and only a stop the
+  server did NOT continue arrives as `goal_state` `paused` + `pausedReason:
+  "interrupted"` — resume (`POST /goal {"action":"resume"}`) or re-dispatch that one.
+  Every non-Pi goal, and every server older than 1.60.0, still needs the old move: a
+  cut-off child fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0),
+  and on older servers it dies silently, so pause goal children before such a restart;
+  resume or re-dispatch after reconciling.
 
 The full design consequences, per-runtime pause semantics and the observed
 failure shapes are in `references/supervision-and-stuck-detectors.md`

@@ -108,7 +108,7 @@ Drain-then-restart is shipped (B4, contract 1.51.0; B4.1, 1.52.0). The drain is 
    * Pass `--on-timeout abort` to refuse instead.
    * An agent that deploys from inside its own Pi Web UI session is excluded from the wait: the script forwards `PI_WEB_UI_SESSION_ID`/`PI_SESSION_ID`.
    * A bare `systemctl restart` bypasses all of this. Restarting without a drain needs `--force --reason`.
-   * **Host gate:** this host's pre-tool hook refuses Bash commands whose text names the restart scripts while any Pi Web UI turn is active. Wait for idle, or write such text to files with file tools rather than echoing it in commands.
+   * **Host command gate:** while real turns are active (`activeTurns − quarantinedRuns` from `/capacity`), the host's command gate refuses the destructive forms — `--force`, `--drain-timeout 0`, and a bare `systemctl restart|stop` of the service — and allows a plain `npm run production:drain-restart` with an advisory. Quoted text, heredoc bodies and comments no longer trip it (an older text-only heuristic did); the gate's own escape is `--override`, for the responsible operator's explicit say-so, not a workaround to reach for.
 2. **Verify process liveness**: `systemctl show pi-web-ui.service -p MainPID -p ActiveEnterTimestamp` changed, and `journalctl -u pi-web-ui.service` shows the extensions loaded with no degradation warnings.
 3. **Verify contract, build and capacity**:
    * `GET /api/v1/capabilities`: the expected `contractVersion`.
@@ -116,7 +116,7 @@ Drain-then-restart is shipped (B4, contract 1.51.0; B4.1, 1.52.0). The drain is 
    * `/capacity`: available.
    * `GET /api/v1/drain`: `idle`.
 4. **Smoke**: one create → prompt → `DELETE`, plus one negative check of the change you deployed.
-5. **Reconcile**: resume paused goals; re-check every child and watch (§4).
+5. **Reconcile**: resume the goals the restart visibly stopped (`goal_state` `paused` + `pausedReason: "interrupted"`; on contract ≥ 1.60.0 Pi goal children continue transient stops themselves, so only the visible stops need you); re-check every child and watch (§4).
 6. **Optionally notify the operator** through the harness's own notification path with the SHA, contract and drain verdict.
 
 The fuller sequence — board check, deploying dependent artefacts first with a backup and

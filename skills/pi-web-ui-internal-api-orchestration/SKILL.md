@@ -689,7 +689,20 @@ disconnect-prone work, the receipt is the truth.
     names which cap. Split the task, or ask for files instead of inline output.
   - `interrupted` with `SERVER_RESTART`: a deploy cut the run off. The watch fires with
     `interruptedByRestart: true`, and receipt-less goal or extension turns carry
-    `runId: "busy-<sessionId>"` (1.52.0). Re-dispatch, or resume the goal, after the restart.
+    `runId: "busy-<sessionId>"` (1.52.0). On contract ≥ 1.60.0 a **Pi goal child** does not
+    need you for a transient stop: the server continues it once (at boot after a restart,
+    or live on a provider abort) — a `goal_state` with
+    `status: "running"` + `interruption.autoContinued: true` — progress, never a `goal_end` —
+    and only a stop it does NOT continue surfaces as `goal_state` `paused` +
+    `pausedReason: "interrupted"` with the cause (`restart_interruption`, `rehydrate_pause`,
+    `provider_abort`, `second_transient`, `unsupported_runtime`, `continue_failed`, …).
+    Resume that visible stop (`POST /goal {"action":"resume"}`) or re-dispatch; every
+    non-Pi goal still needs the old resume-or-re-dispatch move. On older servers, resume
+    or re-dispatch after the restart, as before. Watch forms: `dataMatch
+    {"interruption.autoContinued": true}` sees continues; `dataMatch
+    {"status":"paused","pausedReason":"interrupted"}` sees stops (both plus your objective
+    filter); `pi-orch wait` already registers the continue condition, counts continues into
+    `autoContinues` and settles a visible stop as exit 5 with the cause and a note.
 
 **Completion blocks (1.58.0).** A child that ends its final answer with a
 `pi-completion/v1` block (see §3's brief list) gets it parsed server-side. The receipt
@@ -784,6 +797,8 @@ decision boundaries, restart protocol and notification standards, is
   `production:drain-restart` under a production lock; adapt it to your deployment.
   - On contract ≥ 1.52.0 the drain waits for every busy session, goal continuations and
     browser turns included.
+  - On contract ≥ 1.60.0 a Pi goal child the restart still cuts off continues once on its
+    own at boot; you resume only the stops it reports as `paused`/`interrupted`.
   - On an older server, pause goal-armed children first: its drain cannot see their turns.
   - Afterwards verify `/capabilities` and reconcile every child and watch
     (`references/orchestrator-governance.md` §3).
