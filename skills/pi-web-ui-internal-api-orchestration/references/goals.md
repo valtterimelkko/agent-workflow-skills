@@ -10,12 +10,11 @@ the child.
 ## Arm a goal to protect the child's aim (why a prompt is not enough)
 
 A plain-prompt child has **no durable aim**, so anything that arrives looking
-like an ending can be read as one. A measured case involved a child dispatched
-to prove a transport was interrupted mid-task by an automated end-of-session
-message injected as a user turn. It stopped, honestly reported
-`harness + proxy written; RED/GREEN runs not yet executed`, and began the
-end-of-session flow — a reasonable reading of an instruction saying the session
-was ending.
+like an ending can be read as one. Measured case: a child dispatched
+to prove a transport was interrupted mid-task by an automated "session-end
+summary" message injected as a user turn. It stopped, honestly reported
+`harness + proxy written; RED/GREEN runs not yet executed`, and began writing the
+summary — a reasonable reading of an instruction saying the session was ending.
 The parent finished the work only by steering it back with `mode:"steer"`.
 
 A goal closes that hole: the objective survives the interruption and the loop
@@ -31,8 +30,8 @@ property covers two further failures:
 child executes a specific part of a plan end-to-end, when the work will outlive a
 context window, or when the child must not be derailed by ambient messages. **Do
 not use one** for a one-shot bounded answer, for work you would rather steer
-turn-by-turn, or where you expect frequent operator decisions — a question
-sentinel handles those better.
+turn-by-turn, or where you expect frequent operator decisions — a question sentinel
+handles those better.
 
 ### Write the aim, not the method
 
@@ -63,18 +62,18 @@ POST /api/v1/sessions/:id/goal {"action":"clear"}
 Create-time `goal: { objective, maxTurns }` can arm a goal atomically with the
 session. Pair long work with an explicitly owned retention lease.
 
-**Objective and budget rules (both bite real lanes).** The objective must be a **single line**:
+**Objective and budget rules (both bit real lanes).** The objective must be a **single line**:
 the goal API rejects newlines (`objective must be a single line`), so keep the long text in
 the brief file and point at it. `budgetTokens` is the goal engine's token budget: the server
 default is 5,000,000 and pauses a long goal mid-run (a `pauseReason: "budget"` pause, not a
-failure). Set it explicitly for any child that may run long, sized to the task and the route
-(a long lane on a slower subscription route needed tens of millions); `pi-orch` validates
-1..1,000,000,000 and prints a stderr note when you omit it. Via `pi-orch`:
-`spawn --goal-objective … --goal-budget-tokens N` arms at create;
-`pi-orch goal <sessionId> start --goal-objective … --goal-budget-tokens N` arms a child you
-already created (same completion-template delivery; exit 22 if it is not delivered). Pause,
-resume and clear stay raw API calls. A budget-paused goal needs the budget resolved, not
-repeated resumes. Store the session id, exact objective, start receipt and verifier with the child brief.
+failure). Set it explicitly for any child that may run long: measured programme lanes needed
+tens of millions (40–60 million); `pi-orch` validates 1..1,000,000,000 and
+prints a stderr note when you omit it. Via `pi-orch`: `spawn --goal-objective … --goal-budget-tokens N`
+arms at create; `pi-orch goal <sessionId> start --goal-objective … --goal-budget-tokens N` arms a
+child you already created (the completion template goes in the brief via `pi-orch template --goal`, not a queued follow-up).
+`pi-orch goal <sid> pause|resume|show` covers pause and resume; clear stays a raw API call. A budget-paused goal needs the budget resolved,
+not repeated resumes. Store the
+session id, exact objective, start receipt and verifier with the child brief.
 Canonical statuses include running, paused, wrapping_up, suggested, achieved,
 failed, cleared, idle and unknown; capability-gate support per runtime.
 
@@ -85,6 +84,25 @@ failed, cleared, idle and unknown; capability-gate support per runtime.
 | Command Code | Goal control is honoured at the next prompt/stop boundary by its mod. Prefer deterministic verification when available. |
 | Antigravity (1.38.0) | Fully server-side goal manager: sweeper verifies each completed turn (`verifyCommand` exit code, or the `GOAL_STATUS: ACHIEVED` self-report sentinel) and dispatches continuation prompts while unmet, bounded by `maxTurns`. `/goal …` text at the prompt boundary is intercepted, even while busy. |
 | OpenCode | No standard goal endpoint support; do not infer support from a separate plugin. |
+
+**Antigravity children and the turn limits.** The server cuts an Antigravity
+turn that runs past a hard ceiling (`ANTIGRAVITY_PROMPT_TIMEOUT_MS`) or goes silent
+past a stall window; Pi children have no such cut. Current servers default to a **60 min ceiling**, a
+**30 min silence window while a tool runs** (`ANTIGRAVITY_TOOL_STALL_TIMEOUT_MS`; agy
+emits nothing during a tool, so a long build or test is silent) and the 5 min window
+for model silence. Before that the ceiling was 10 min and any 5 min silence counted
+as a stall, which cut healthy reviewers and builds off; briefs no longer need the
+old "finish inside 10 minutes" workarounds. Check `/health` `buildIdentity.revision`
+if you are unsure which server is live. A cut turn still ends `error` with
+`error: "timeout"|"stall"`; a goal counts it as a strike (3 consecutive pause it as
+`pausedReason: error`) and its continuation tells the model it was cut off. A prompt
+sent right after a cut-off now resumes the same conversation cleanly (the race where
+it inherited the dying process's "interrupted" result is fixed). What still belongs
+in a child's brief: commit or write after each step; run commands that may stay
+silent past 30 minutes in the background with output to a file (live validation
+showed a goal re-running the same silent build after a cut-off); let reviews write
+their file as they go. After a cut-off, re-prompt or resume: files already written
+stay. Never raise the limits from a child; that is a production env change.
 
 **Read back, do not infer:** a completed goal-start receipt or HTTP 200/202 is
 not goal completion. Read `/goal`, receipt evidence and the handback; independently
@@ -120,11 +138,25 @@ consequential question.
 **Do not add a per-turn `agent_end` condition as a belt-and-braces backstop.**
 For a goal-armed child it fires on *every* turn boundary, so it produces false
 wakes that read like progress or completion and burn the watch's wake budget.
-A verified case showed a P2 watch registered with `agent_end` "just in case"
-firing at a plain turn boundary while the child was still busy and its goal
+Verified case: a watch registered with `agent_end` "just in
+case" fired at a plain turn boundary while the child was still busy and its goal
 still `running`. A recovery backstop belongs on the **parent's** side — a wake
 deadline or a bounded background backstop (see
 `long-horizon-waiting-strategies`) — not as extra conditions on the child watch.
+
+**Put the paused condition on every goal watch, corrections included.** A correction
+dispatched onto a reused child with only a `goal_end` condition missed the child pausing
+to ask; the parent sat idle until the backstop.
+
+**Anchor text sentinels.** A question sentinel matched with `contains` fired on the
+child's *thinking*, which quoted the brief. Name a line-shaped sentinel and match it with
+an end-anchored regex, for example
+`(^|\n)PARENT-QUESTION: [0-9]{2}-[A-Za-z0-9_.-]+\.md\s*$`, so only a final line the child
+actually emits can fire it.
+
+**Clearing a goal yourself fires the watch.** A parent-side `clear` (to stop or redirect
+a child) emits `goal_end`/paused events like any other ending; expect that wake and
+reconcile it instead of treating it as the child's result.
 
 **Reusing a child session has an extra edge:** starting its next goal may clear
 the old one, producing an old-goal `goal_end` before the new goal starts. An
@@ -149,7 +181,7 @@ and enough wake budget, then reconcile goal identity on every wake. Never treat
 the first firing as success. Preserve old ledgers before intentionally replacing
 an owned watch for a new phase; do not refresh a live watch merely to check it.
 
-### Pi goal-engine behaviours to plan for (observed behaviour)
+### Pi goal-engine behaviours to plan for (all observed live)
 
 - **A goal can read `failed` while the child is still working.** The goal engine
   failed a working child's goal with `pausedReason: "error"` and `lastReason: "run ended
@@ -165,8 +197,8 @@ an owned watch for a new phase; do not refresh a live watch merely to check it.
 - **A provider abort mid-turn fails the goal** (`pausedReason: "error"`, transcript
   `stopReason: "aborted"`, "Request was aborted"). The work so far is intact.
   - `{"action":"resume"}` on a `failed` goal answered `applied:false, reason:"not_paused"`.
-    The goal read `running` briefly, then `failed` again without continuing.
-    Do not trust that resume.
+    The goal read `running` for a few minutes, then `failed` again without continuing
+    (observed again on a later attempt). Do not trust that resume.
   - Diagnose the abort, then **start a new goal** with the same objective plus a line
     saying what is already done. A correction-round restart (new objective,
     verification looking for the correction marker) is the same move.
@@ -218,8 +250,8 @@ the same interruption facts.
 
 **Do useful work while it exists; pause when actually going idle.** On the repaired
 Goal Engine, an engine-owned continuation remains cancellable until the runtime
-settles; it is not an uncancellable shared follow-up. This lets a parent with independent authority remain running for genuinely
-independent work, then park before waiting.
+settles; it is not an uncancellable shared follow-up. This lets an authorised
+parent remain running for genuinely independent work, then park before waiting.
 Verify the repaired extension is loaded before relying on it; source on disk
 alone does not upgrade an old host. Older hosts should retain their conservative
 known-good supervision flow rather than hot-reload during a live child window.
@@ -248,15 +280,15 @@ and wait for the parked boundary rather than claiming the state changed.
 ### Boundaries that remain unchanged
 
 - Never use `Status: NEEDS_USER_INPUT` as a substitute for supervision pause.
-  It is reserved for an actual human decision and has different resume semantics.
-- Never resume explicitly requested, budget, error or ownership-fenced pauses from
-  an arbitrary wake. Keep three-strike error and compaction/ownership guards intact.
-- A hard budget stop needs the appropriate budget resolution, not repeated
+  It is reserved for an actual operator decision and has different resume semantics.
+- Never resume operator-requested, budget, error or ownership-fenced pauses from an
+  arbitrary wake. Keep three-strike error and compaction/ownership guards intact.
+- A hard budget stop needs the appropriate budget or operator resolution, not repeated
   resume calls. Never infer credential, production or publication authority.
 - Pause/resume your own goal only through the supported harness tool. Claude and
   Command Code parents use their runtime-specific controls, not Pi tool names.
 - A server restart leaves existing watch ledgers detached. Preserve history,
-  reconcile current generation/owner and explicitly restore observation.
+  reconcile the current generation and lease, and explicitly restore observation.
 - Keep a checkpoint with current truth, not competing "paused" and "running"
   sections. Follow `multi-phase.md` for phased programmes and `walk-away.md` for
   retention, CAS and actual wake delivery.

@@ -9,10 +9,10 @@ monitor, collect each `/transcript`, then either rank them or synthesize the
 strongest parts deliberately. Don't pick one blindly.
 
 **Task decomposition** — give each child a distinct responsibility (planner,
-implementer, critic, synthesizer) and route each according to the recorded route
-for that kind of work. When the responsibilities are *dependent phases rather
-than parallel roles*, that is a multi-wave programme — plan it with
-`multi-phase.md` instead of a one-wave fan-out.
+implementer, critic, synthesizer) and route each to the model the policy table
+suggests for that kind of work. When the responsibilities are *dependent
+phases rather than parallel roles*, that is a multi-wave programme — plan it
+with `multi-phase.md` instead of a one-wave fan-out.
 
 **Reviewer fan-out** — one draft, several parallel critiques (technical, clarity,
 edge-case/risk), merged by the parent.
@@ -41,9 +41,9 @@ using *different* models or *different* roles, which batch work does not.
 ## Speaking to the operator by voice
 
 Voice is an interaction mode, not a runtime — same API, same rules. What changes
-is the reporting: announce the dispatch compactly before acting (for example,
-"starting two child sessions on the selected routes"), make the target, runtime,
-model, session count, and likely side effects clear up front, then
+is the reporting: announce the dispatch compactly before acting ("starting two
+child sessions on two different models"), make the target,
+runtime, model, session count, and likely side effects clear up front, then
 report evidence rather than claiming success from an HTTP acknowledgement. Keep
 spoken updates short and concrete, and say plainly when something is still
 running and what you'll check next.
@@ -58,7 +58,7 @@ running and what you'll check next.
 ## Monitoring approach
 ## Results by child
 ## Synthesis / final output
-## Decisions requiring input (numbered; options, recommendation, and why each matters — kept apart from what you decided autonomously)
+## Decisions for you (numbered; each with options, your recommendation, and why it matters — kept apart from what you decided autonomously)
 ## Caveats, failures, remaining uncertainty
 ## Usage summary
 ```

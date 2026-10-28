@@ -20,12 +20,9 @@ Antigravity cannot run in-process background event loops (like Pi extensions). H
 
 ---
 
-### What an Antigravity parent may already have
+### What the host already gives an Antigravity parent
 
-Your harness may provide synchronous coordination and history tools; use those instead of
-raw transcripts when available. They cannot start a turn, so no wake mechanism exists
-beyond the two primitives above. **Children you dispatch still need the
-`orchestrated-child-worker` directive in their prompt** (SKILL.md §3).
+Hooks configured in `~/.gemini/config/hooks.json` (`PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop`) and any MCP server you have attached are available automatically, so a parent can read a child's or a past session's state without parsing raw transcripts. They are synchronous and cannot start a turn, so no wake mechanism exists beyond the two primitives above. **Children you dispatch still need the `orchestrated-child-worker` directive in their prompt** (SKILL.md §3).
 
 ---
 
@@ -34,7 +31,7 @@ beyond the two primitives above. **Children you dispatch still need the
 Do **not** write ad-hoc bash scripts into scratch to poll watches. Use the persistent helper script in this skill:
 
 ```bash
-./scripts/wait-watch.sh <watchId> [max_iterations] [timeout_ms]
+scripts/wait-watch.sh <watchId> [max_iterations] [timeout_ms]
 ```
 
 ### End-to-End Dispatch & Wait Pattern
@@ -49,8 +46,8 @@ Step 1: Register pure-observer watch on the child
 
 Step 2: Launch the canonical watcher in the background via run_command
   Tool Call: run_command(
-    CommandLine: "./scripts/wait-watch.sh <watchId>",
-    Cwd: "<skill-directory>",
+    CommandLine: "scripts/wait-watch.sh <watchId>",
+    Cwd: "<absolute path to the skill directory>",
     WaitMsBeforeAsync: 1000
   )
   Returns: Task id "<taskId>"
@@ -68,6 +65,14 @@ Step 4: END YOUR TURN IMMEDIATELY
 
 ---
 
+### Antigravity parent rules
+
+- Pass `--objective` on every goal watch.
+- Arm the goal after create (`goal <sid> start`): goal-at-create is refused for antigravity.
+- Objectives are single lines.
+- Release gates are enforced.
+- Never resolve conflicts in a live checkout (scratch worktree, then `--ff-only`).
+
 ## 3. The Four Immutable Orchestrator Invariants
 
 ### Invariant 1: "Arm the Watcher, End the Turn" (Anti-Polling Rule)
@@ -76,23 +81,22 @@ Step 4: END YOUR TURN IMMEDIATELY
 * **The Rule**: Once a dispatch request returns `202 Accepted`, you must register the watch, launch `wait-watch.sh`, arm the `schedule` backstop, and **stop calling tools**. Wait reactively for the harness notification.
 
 ### Invariant 2: Milestone-Driven Communication (Not Continuous Peeking)
-* When an operator requests "frequent communication" (for example through the harness's
-  notification path), this means reporting at **discrete operational milestones**:
-  1. Phase dispatched & scope locked (`notify milestone ...`).
+* When an operator requests "frequent communication", this means reporting at **discrete operational milestones** through your notification path:
+  1. Phase dispatched & scope locked (`<notify> milestone ...`).
   2. Verification / TDD suite confirmed green.
   3. Defect discovery or architectural pivot.
-  4. Final delivery, commits pushed, and handoff (`notify done ...`).
+  4. Final delivery, commits pushed, and handoff (`<notify> done ...`).
 * **Anti-Pattern**: Peeking into tmux or running status checks every 3 seconds to narrate individual lines of code being written is unnecessary noise that drives token waste.
 
 ### Invariant 3: Post-Compaction State Anchor (`STATE.md`)
 * Context compaction strips in-turn ephemeral memory. A compacted model often suffers disorientation—guessing default HTTP ports (`localhost:3000`) or missing token paths.
 * **The Discipline**: Maintain a lightweight 5-line `STATE.md` in the scratch directory:
   ```markdown
-  SOCKET=~/.pi-web-ui/internal-api.sock
-  TOKEN_PATH=~/.pi-web-ui/internal-api-token
-  TARGET_REPO=path/to/pi-web-ui
-  CHILD_ID=<child-session-id>
-  ACTIVE_WATCH_ID=watch-<watch-id>
+  SOCKET=$HOME/.pi-web-ui/internal-api.sock
+  TOKEN_PATH=$HOME/.pi-web-ui/internal-api-token
+  TARGET_REPO=/work/project
+  CHILD_ID=<child session id>
+  ACTIVE_WATCH_ID=<watch id>
   ```
   Whenever you wake up after a compaction, read `STATE.md` first. Never guess connection endpoints.
 
@@ -105,11 +109,10 @@ Step 4: END YOUR TURN IMMEDIATELY
 
 ## 4. Production Service Restart Protocol
 
-Follow the canonical protocol in `orchestrator-governance.md` §3–§4: the responsible operator's authority
+Follow the canonical protocol in `orchestrator-governance.md` §3–§4: the operator's authority
 first, the parent (never a child, which the server hosts and would kill mid-turn) restarts
-through `production:drain-restart` (the drain is the gate; pause goal-armed children first on a
-server older than contract 1.52.0), rebuilds with `npm run build` when code changed, then verifies
-`systemctl is-active` and `/capabilities`. Antigravity-specific: existing `active` watches
+through the deployment's drain-then-restart procedure (the drain is the gate; pause goal-armed
+children first on a server older than contract 1.52.0), rebuilds with `npm run build` when code
+changed, then verifies the service is active and `/capabilities` answers. Antigravity-specific: existing `active` watches
 rehydrate at boot (re-register one that reloads `detached`), and `wait-watch.sh` detects the
-restart via the MainPID of `${PI_WEB_UI_SERVICE:-pi-web-ui.service}` (a documented no-op when
-`systemctl` or the unit is unavailable) — relaunch it with the existing cursor.
+restart via `MainPID` — relaunch it with the existing cursor.

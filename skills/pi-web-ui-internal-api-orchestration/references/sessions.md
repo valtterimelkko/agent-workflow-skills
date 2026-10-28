@@ -10,9 +10,9 @@
 { "action": "set_model", "modelId": "opus" }
 { "action": "set_thinking_level", "level": "high" }
 { "action": "set_effort", "effort": "low" }
-{ "action": "acquire_retention", "retention": { "mode": "durable", "ttlSeconds": 7200, "ownerId": "owner-b" } }
-{ "action": "renew_retention",  "retentionLeaseId": "<uuid>", "ownerId": "<owner>", "pinTtlSeconds": 7200 }
-{ "action": "release_retention","retentionLeaseId": "<uuid>", "ownerId": "<owner>" }
+{ "action": "acquire_retention", "retention": { "mode": "durable", "ttlSeconds": 7200, "ownerId": "<retention-id>" } }
+{ "action": "renew_retention",  "retentionLeaseId": "<uuid>", "ownerId": "<retention-id>", "pinTtlSeconds": 7200 }
+{ "action": "release_retention","retentionLeaseId": "<uuid>", "ownerId": "<retention-id>" }
 ```
 
 For Pi, `set_thinking_level` currently requires the runtime session to be loaded;
@@ -33,11 +33,12 @@ to re-apply a model after a control change just because the server recycled.
 idle-only, applies to the next turn, returns the canonical binding plus requested
 and accepted aliases and a capability hash, and never changes `thinkingLevel`.
 
-## Create-time options
+## Session environment
 
-Runtime subprocesses created through the Internal API receive
-`PI_WEB_UI_SESSION_ID`, `PI_WEB_UI_SESSION_ORIGIN` and
-`PI_WEB_UI_PARENT_SESSION_ID`, so a managed session can learn its own id and parent.
+Runtime subprocesses receive `PI_WEB_UI_SESSION_ID`, `PI_WEB_UI_SESSION_ORIGIN` and
+`PI_WEB_UI_PARENT_SESSION_ID` (contract 1.47.0), so a managed session can learn its own id
+and its parent — which is what lets a child name itself in its own hand-back. A bare CLI has
+none of these; omit the header rather than inventing an id.
 
 ## Dispatch modes and admission
 
@@ -69,24 +70,24 @@ It can echo exactly what you asked for while the session binds to the backend's
 default. Two reads settle it, and you want both before spending a long run:
 
 - `GET /sessions/:id/info` — the effective `model`, which is **provider-qualified**
-  (`provider/model-id`, not `model-id`). A bare id here is unverified, not
-  confirmed.
+  (`provider/model-id`, not a bare `model-id`). A bare id here is unverified,
+  not confirmed.
 - For Pi sessions, the on-disk record at `sessionPath` carries `model_change`
   entries with `provider` and `modelId`. **The LAST one binds.** A session that
   initialises on the default and rebinds milliseconds later produces two entries;
   reading only the first tells you the opposite of the truth.
 
-Observed failure shape: one session showed `provider-a/model-a` followed
-milliseconds later by `provider-b/model-b`. A run silently bound a child to a
-materially more expensive model than intended, with a create response that read
-correctly throughout. Creating with `model` in the create body bound cleanly in
-one entry; create-then-`set_model` produced the default-first pattern. Prefer the
-former, and verify regardless.
+Observed failure shape: one session showed one provider-qualified model at `…37.234Z`
+followed by a different, far costlier one at `…37.302Z` — 68 ms apart. The run silently bound
+a child to a model the operator had not authorised, with a create response that read
+correctly throughout. Creating with
+`model` in the create body bound cleanly in one entry; create-then-`set_model`
+produced the default-first pattern. Prefer the former, and verify regardless.
 
-Why bindings drift at all: the Pi SDK restores history bindings only for sessions
-that already carry messages, so before 1.33.0 a session unloaded between create
-and dispatch rehydrated silently on the runtime default — a benchmark drift
-incident that receipts would have exposed.
+Why bindings drift at all: the Pi SDK restores history bindings only for sessions that
+already carry messages, so before 1.33.0 a session unloaded between create and dispatch
+rehydrated silently on the runtime default — a real 6-of-8 benchmark drift incident on
+2026-09-03.
 
 **Since contract 1.33.0 the verification shortcut is the run receipt**: every
 dispatch re-applies a drifted Pi binding before the turn and records
@@ -138,8 +139,8 @@ whole registry any more:
 
 ```text
 GET $API_BASE/sessions?runtime=pi,claude        # subset of pi,claude,opencode,antigravity,commandcode
-GET $API_BASE/sessions?since=<iso>
-GET $API_BASE/sessions?cwd=/path/to/project     # exact match
+GET $API_BASE/sessions?since=2026-09-01T00:00:00Z
+GET $API_BASE/sessions?cwd=/work/my-project     # exact match
 GET $API_BASE/sessions?limit=5                  # 1..1000, applied after sorting/filtering
 ```
 
@@ -180,6 +181,5 @@ runtime-native id (Claude native id, OpenCode `ses_*`, Antigravity conversation
 id). Control, diagnostics, notification, and watch routes want the **internal
 id**; `/runs/:runId` wants a `runId`. Resolve first rather than guessing —
 `GET /sessions/:id/evidence` accepts all supported forms and returns the
-canonical `sessionId`, and `npm run debug:where -- <id|path|native-id>` in the
-[Pi Web UI repository](https://github.com/valtterimelkko/pi-web-ui) is the offline
-locator. Do not open with a global grep.
+canonical `sessionId`, and `npm run debug:where -- <id|path|native-id>` in the Pi
+Web UI repo is the offline locator. Do not open with a global grep.

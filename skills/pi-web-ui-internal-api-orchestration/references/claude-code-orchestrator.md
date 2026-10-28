@@ -13,7 +13,7 @@
 
 | You are… | Route |
 |---|---|
-| Bare interactive CLI | pure-observer watch **via a watch-wake extension/mod for your harness** (register and poll it there; never a hand-rolled `onFire`) |
+| Bare interactive CLI | pure-observer watch **via `mcp__watch-wake__watch_wake_register`** (the mod registers and polls it; never a hand-rolled `onFire`) |
 | Managed Claude session (Pi Web UI created you) | **server `onFire`** targeting your own internal session id (§3) |
 | `claude -p` | nothing can wake it: dispatch detached and hand back, or orchestrate from an interactive/managed parent |
 
@@ -23,15 +23,15 @@ a turn, name the tool call that starts your next one.
 ## 2. Bare CLI: dispatch-and-idle
 
 ```text
-1. Discover capabilities, capacity and models (`pi-orch capabilities|capacity|models`); check the provider's remaining quota in its own dashboard or CLI; pick the route (routing.md).
+1. Discover (`pi-orch capabilities/capacity/models`) and read your provider quota dashboards; pick the route (`routing.md`).
 2. pi-orch spawn --runtime pi --cwd <worktree> --model-selector <sel> --thinking <lvl> \
      --owner orch-<programme>-<parentShort8>-<lane> --ttl <window+headroom> [goal flags] --id-only
-     -> sessionId. Goal child that may run long: --goal-objective "<one line>" --goal-budget-tokens <N>
-3. Use a watch-wake extension/mod for your harness to register a watch on `<child>`
-     **before dispatch**: conditions=[{"id":"done","type":"event_type","eventType":"agent_end"}]
-     and message="Child {{sessionId}} fired {{conditionId}} at {{firedAt}} — reconcile it."
+     -> sessionId. Goal child that may run long: --goal-objective "<one line>" --goal-budget-tokens 60000000
+3. mcp__watch-wake__watch_wake_register  session_id=<child>,        # BEFORE dispatch: a fast
+     conditions=[{"id":"done","type":"event_type","eventType":"agent_end"}],   # child can end
+     message="Child {{sessionId}} fired {{conditionId}} at {{firedAt}} — reconcile it."  # first
 4. pi-orch prompt <child> --message "…" --id-only                                         -> runId
-5. Arm the watch-wake extension/mod's model-free deadline (window + headroom)
+5. mcp__watch-wake__wake_deadline action=arm (window + headroom)
 6. STATE file + milestone notification if warranted, then END THE TURN.
 ```
 
@@ -39,13 +39,15 @@ a turn, name the tool call that starts your next one.
 waits), and do not register the child's watch with `pi-orch watch register` as your wake: that
 creates a server-side watch with no delivery to a bare CLI, and the mod then refuses to
 register over a foreign watch. The mod's tool is the registration. A Claude Code parent is not
-a Pi Web UI session, so its children carry no parent lineage: the `--owner` id above is how
-`pi-orch status --owner <id>` finds them and how they are counted (`pi-orch.md`). Raw `POST /sessions` remains the
-fallback for what `pi-orch` does not cover.
+a Pi Web UI session, so its children carry no managed parent lineage (a server on contract ≥ 1.63.0
+records the native parent id): the `--owner` retention id above is how
+`pi-orch status --owner <id>` finds them and how they are counted (`pi-orch.md`). Put
+`$CLAUDE_CODE_SESSION_ID` in the child directive as the parent session id (SKILL.md §3). Raw
+`POST /sessions` remains the fallback for what `pi-orch` does not cover.
 
 On wake: reconcile **every** owned child against durable evidence (`evidence.md`), cancel
-the deadline by its exact id once the window is settled, cancel the watch-wake registration
-for work that is done, release the exact lease you own
+the deadline by its exact id once the window is settled, `watch_wake_cancel` what you are
+done with, release the exact lease you own
 (`{"action":"release_retention","retentionLeaseId":"<leaseId>"}`), delete disposable children.
 
 - **Fan-in:** one registration per child (one server watch per session); each has its own
@@ -53,9 +55,10 @@ for work that is done, release the exact lease you own
 - **Multi-turn / goal children:** `max_wakes` > 1 **with `"once": false` on the condition**
   (the server default `once: true` fires only once, making extra wakes unreachable); for
   goals watch `goal_end` plus a state-filtered question/pause (`goals.md`).
-- **API-created children normally produce one terminal turn** (contract 1.47.0). If a
-  harness-specific setting opts a child into an additional lifecycle turn, expect a
-  second `agent_end` minutes later and `abort` before deleting a still-busy child.
+- **Expect extra turns you did not dispatch.** Anything your child's own host adds at the
+  end of a turn (a capture or summary request, an extension continuation) produces a second
+  `agent_end` minutes later — budget `max_wakes` for it, and `abort` before deleting a child
+  that is still busy.
 - **After a stale notice,** check the child's run receipt before re-registering: a new watch
   cannot see an `agent_end` that already happened.
 - **Someone else's watch on the child** (label not `watch-wake:` or has `onFire`): the mod
@@ -78,10 +81,11 @@ server-side, it never keeps your turn busy (`walk-away.md`).
 ## 4. Routing notes specific to a Claude parent
 
 - `routing.md` is harness-neutral; a Claude parent does **not** imply Claude children.
-- A parent may already draw on a scarce provider pool: keep the parent for planning,
-  adjudication and verification; check current provider capacity and quota in the
-  provider's own dashboard or CLI, send routine children to an available route, and
-  reserve specialist routes for work where that capability is load-bearing.
+- A strong parent model already draws on a scarce pool: keep the parent for planning,
+  adjudication and verification; send routine children to a Class 1 route on a different,
+  generous pool, and reserve the strongest model for work where that capability is
+  load-bearing (`routing.md`, *Choose by work class*).
+- Claude children count against the profile cap (`/capacity` → `claudeProfiles`; `429 PROFILE_CAPACITY_EXHAUSTED`); for overflow, ask the operator (`routing.md`, the concurrency section).
 - Claude children: `runtime: "claude"`, the exact live `/models` entry, binding verified from
   the create response or `/info` (`sessions.md`). Claude is **SDK-only** on the API (contract
   1.46.0): `/models?runtime=claude` lists SDK profiles only, and a create, prompt, watch wake,
@@ -93,10 +97,10 @@ server-side, it never keeps your turn busy (`walk-away.md`).
 
 ## 5. Production restarts
 
-Same protocol as every harness (`orchestrator-governance.md` §3–§4): only with the responsible operator's
-authority, through `production:drain-restart` (the drain is the gate; on a server older than
-contract 1.52.0 pause goal-armed children first), never from inside a child. The host's
-command gate additionally refuses the destructive forms (`--force`, `--drain-timeout 0`, a
-bare `systemctl restart|stop`) while real turns are active — its override is `--override`, not
-a workaround. Afterwards watches rehydrate; the mod keeps polling with its
-cursor, and a watch that reloaded `detached` arrives as a stale-notice wake — re-register it.
+Same protocol as every harness (`orchestrator-governance.md` §3–§4): only with the operator's
+authority, through the deployment's drain-then-restart procedure (the drain is the gate; on a
+server older than contract 1.52.0 pause goal-armed children first), never from inside a child.
+If your deployment wraps the restart in a gate that refuses destructive forms while real turns
+are active, never work around it: report the block or use its documented escape with the
+operator's say-so. Afterwards watches rehydrate; the mod keeps polling with its cursor, and a
+watch that reloaded `detached` arrives as a stale-notice wake — re-register it.
