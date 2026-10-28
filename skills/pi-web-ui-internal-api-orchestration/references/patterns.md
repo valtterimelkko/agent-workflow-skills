@@ -9,7 +9,7 @@ monitor, collect each `/transcript`, then either rank them or synthesize the
 strongest parts deliberately. Don't pick one blindly.
 
 **Task decomposition** — give each child a distinct responsibility (planner,
-implementer, critic, synthesizer) and route each to the model the policy table
+implementer, critic, synthesizer) and route each to the route `routing.md`
 suggests for that kind of work. When the responsibilities are *dependent
 phases rather than parallel roles*, that is a multi-wave programme — plan it
 with `multi-phase.md` instead of a one-wave fan-out.

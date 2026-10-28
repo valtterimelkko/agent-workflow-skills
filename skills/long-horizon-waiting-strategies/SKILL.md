@@ -659,7 +659,7 @@ failure shapes are in
 - Your harness's own background-execution docs — background task launch, wake delivery,
   task listing and cancellation, and the timeout ceiling.
 - Origin: the pre-idle checklist and mandatory re-arm rule come from a live post-mortem
-  (an un-backstopped 3.5 h stall).
+  (an un-backstopped multi-hour stall).
 - Origin: the supervision section comes from live incidents where orchestrators used
   status files the child wrote by choice as liveness proxies, causing false positives
   while children were actively running tool calls. Independent platform signals prevent

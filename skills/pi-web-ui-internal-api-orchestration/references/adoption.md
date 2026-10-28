@@ -65,7 +65,7 @@ both outcomes mechanically on the next prompt/goal/control action:
 - **Live foreign runtime holding the lease** → `409 SESSION_OWNED_BY_OTHER_RUNTIME` with
   `ownerPid`, `ownerMode`, `reason` — no run is created and nothing is touched.
   Stop the other runtime or do an intentional `/autocompact75 handoff` +
-  `/autocompact75 claim` transfer, then retry.
+  `/autocompact75 claim` transfer (commands of the Pi auto-compaction extension, if you have it), then retry.
 - **Dead lease holder** (including a recycled pid — liveness is proven by pid AND the
   lease's recorded process-start identity, and uncertain evidence fails
   closed) → the API **recovers automatically** (dispose→rehydrate, pins
@@ -165,8 +165,8 @@ API remains the canonical contract surface.
   where the run may outlive you). Adopted children produce normal run receipts
   and idle→running→idle status transitions; `child_dispatched` and
   `child_turn_ended` fan out to the parent as documented in `walk-away.md`.
-- Keep tracking the tree yourself: there is still no `GET /sessions?parent=…`
-  filter and no orchestration job registry.
+- Keep your own record of the tree as well: `GET /sessions?parent=<id>` (1.54.0+)
+  lists linked children, but there is no orchestration job registry.
 - The native transcript is never modified by adoption and is retained on
   registry delete — the operator's history survives cleanup of your entries.
 
