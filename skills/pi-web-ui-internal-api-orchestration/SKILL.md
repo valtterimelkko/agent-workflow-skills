@@ -400,13 +400,13 @@ tree record too.
 first. Add `"preflight": {"paths": [...], "tools": [...]}` (absolute paths, bare tool
 names; also accepted on `POST /sessions/:id/prompt`) for the files and tools the
 brief depends on: a bad workspace then fails in one cheap round trip instead of
-43% of children discovering it mid-task. Batch create answers `200` with
+many children discovering it mid-task. Batch create answers `200` with
 per-entry `PREFLIGHT_FAILED`. Treat it as fix-then-resend, never blind retry.
 
 **The create response's model echo is not proof of binding.** Verify the
 effective, provider-qualified model via `/info` (and for Pi, the last
 `model_change` entry on disk) before spending a long run — a silent rebind to a
-3× costlier model has happened with a correct-looking echo.
+much costlier model has happened with a correct-looking echo.
 **→ `references/sessions.md`** (Model binding) has the verification reads, the
 Claude-profile rules, and the observed failure shape.
 
@@ -489,8 +489,8 @@ self-signs-off:
 
 Put the directive **in the prompt itself**, not only in a brief file it points to, and restate
 it inside a goal objective ("follow `orchestrated-child-worker`; mark the goal achieved and end") —
-goal-engine dispatches that dropped it produced most of the unmandated children in a
-September 2026 audit of 241 child sessions. The rest of a good brief (each item traces to a
+goal-engine dispatches that dropped it produced most of the unmandated children in an
+audit of real child sessions. The rest of a good brief (each item traces to a
 recurring failure in that audit):
 
 - **Its own worktree** for every concurrent child — never two children in one main checkout.
@@ -584,7 +584,7 @@ your turn, name the exact tool call that delivers each wake into this session.
 | Bare **Pi** CLI | `watch_wake_register` from *this* session + `wake_deadline`; if the tool is unavailable/broken, an owned pure-observer ledger plus a bounded in-harness relay whose **process exit** wakes you (record its actual delivery id; a raw server watch never counts as local delivery) | `long-horizon-waiting-strategies` |
 | Bare **Claude Code** CLI | the `watch-wake` mod: `mcp__watch-wake__watch_wake_register` + `wake_deadline` (wakes a fully idle CLI); an exiting background watcher only as fallback | `references/claude-code-orchestrator.md` |
 | **Antigravity** `agy` / IDE | `scripts/wait-watch.sh <watchId>` via `run_command` + native `schedule` backstop | `references/antigravity-orchestrator.md` |
-| **Command Code** | its watch-wake mod (parks in `sleep`; cannot start an idle run) | `references/walk-away.md` (Bare-CLI parents) |
+| **Command Code** | no published watch-wake port: park inside a capped `sleep` (it cannot start an idle run) | `references/walk-away.md` (Bare-CLI parents) |
 | `claude -p` / one-shot | cannot wait: hand back instead | — |
 
 The rules worth carrying in your head:
@@ -713,7 +713,7 @@ disconnect-prone work, the receipt is the truth.
     `paused` + `pausedReason: "interrupted"` with the cause — exactly one of:
     `restart_interruption`/`rehydrate_pause` that could not be continued,
     `second_transient`, `continue_failed`, `unsupported_runtime` (non-Pi goals, boot sweep
-    only). A provider-aborted goal is NOT continued: it ends exactly as before wave K (a
+    only). A provider-aborted goal is NOT continued: it ends exactly as it did before 1.60.0 (a
     failed `goal_end`) and needs you as it always did. Resume a visible stop (`POST /goal
     {"action":"resume"}`) or re-dispatch; every non-Pi goal still needs the old
     resume-or-re-dispatch move. On older servers, resume or re-dispatch after the
@@ -783,7 +783,7 @@ ownership/fencing, post-adoption wiring, worked example. **Read it before your f
   own (payload key `retentionLeaseId`). Then `POST /sessions/:id/abort` if work
   must stop, and `DELETE /sessions/:id` for disposable sessions you created.
 - `DELETE` of a Pi session runs its extensions' `session_shutdown` (reason `quit`,
-  bounded 5 s; B5, 2026-09-29): the child's `bg_run` background processes (dev
+  bounded 5 s): the child's background-shell processes (dev
   servers, watchers) and goal/watch timers end with it, and the call can take up
   to 5 s longer. Collect anything a child's background task produced before
   deleting it.
@@ -829,7 +829,7 @@ decision boundaries, restart protocol and notification standards, is
   parent checks both (details in the governance file §8).
 - **Contain your own proofs.** Any memory or isolation experiment runs under its own hard
   memory cap, inside a subtree you created and verified, with self-capped allocations: an
-  escaped proof once grew to tens of gigabytes and the host OOM killer took the service down.
+  escaped proof once grew without bound and the host OOM killer took the service down.
 - **Run the CI's gate list, not a subset**, before merging or deploying — including
   changed-source ratchets against an explicit base (`npm run lint:ratchet -- --base <lane base or previous master>` in a
   repo that has one; the default base sees nothing on a merge commit). Local `lint` passing while CI's ratchet fails is a real gap.

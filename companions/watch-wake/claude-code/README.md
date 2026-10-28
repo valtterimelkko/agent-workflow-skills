@@ -215,3 +215,7 @@ deadline arm/expiry/restore, and the headless/Remote-Control wake decision.
 - pi-orch — https://github.com/valtterimelkko/pi-orch
 - the pack — https://github.com/valtterimelkko/agent-workflow-skills/blob/main/packs/pi-web-ui-orchestration-pack/README.md
 - the watch-wake companion — [`../README.md`](../README.md)
+
+## Verify the socket transport on your install
+
+The token is meant to travel only over the local Unix socket. That depends on your Claude Code engine honouring `socketPath` in `http.fetch` (or on the `curl --unix-socket` fallback). On a new install, register one watch against a throwaway child and confirm the registration appears in the Pi Web UI server's watch list for that child before trusting it with real work. If the engine ever ignored `socketPath`, the request would go to `http://localhost` on port 80 instead, so check that nothing else listens there.

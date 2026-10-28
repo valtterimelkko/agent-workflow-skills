@@ -1,7 +1,7 @@
 # Antigravity Orchestrator Playbook: Zero-Token Supervision & Token-Efficiency Rules
 
 > **Audience**: This reference is **MANDATORY for Antigravity CLI / IDE orchestrators** (`agy`) when coordinating children, managing background waits, or controlling services over the Pi Web UI Internal API.
-> **Non-Antigravity Agents**: Claude Code orchestrators use `references/claude-code-orchestrator.md`; Pi Coding Agent orchestrators use their own layers (`watch-wake`, `bg_run`, `wake_deadline`); they must **skip this document**.
+> **Non-Antigravity Agents**: Claude Code orchestrators use `references/claude-code-orchestrator.md`; Pi Coding Agent orchestrators use their own layers (`watch-wake`, a background-shell tool, `wake_deadline`); they must **skip this document**.
 
 ---
 

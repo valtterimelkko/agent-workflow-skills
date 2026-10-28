@@ -23,7 +23,7 @@ backstop; where the mod is unavailable, a background task that *exits* is the wa
 
 Check once per session whether the tools `mcp__watch-wake__watch_wake_register`,
 `…_list`, `…_cancel` and `mcp__watch-wake__wake_deadline` exist. The companion's
-[`README`](../../../companions/watch-wake/README.md) covers installing and verifying the
+[`README`](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/companions/watch-wake/README.md) covers installing and verifying the
 mod; if the tools are absent, that is the fast path to fixing it.
 
 ## Why Claude Code can now wake an idle session
@@ -34,8 +34,8 @@ in-process plugin API (**function hooks**, "mods"). A mod can keep timers alive 
 session (`$.clock.every`) and submit a prompt that **starts a turn of its own once the
 session is idle** (`$.prompt.submit`). That is the same capability Pi's
 `sendUserMessage(..., {deliverAs: "followUp", triggerTurn: true})` gives, and more than
-Command Code's mod, which must park in `sleep`. Source and contract: the watch-wake
-companion, [`companions/watch-wake/`](../../../companions/watch-wake/).
+a Command Code parent can do, which must park inside a `sleep` tool call. Source and contract: the watch-wake
+companion, [`companions/watch-wake/`](https://github.com/valtterimelkko/agent-workflow-skills/tree/main/companions/watch-wake/).
 
 ## Primary: the `watch-wake` mod
 
@@ -139,9 +139,8 @@ id; advance the cursor every round) or the `?sinceIndex=N` poll. The registered 
 by itself: the exiting watcher is.
 
 Properties: it survives multi-hour interruptions of the parent's usage window (observed),
-and it is cheaply re-armable — chain watchers across a long job. Observed from a Remote
-Control server session: the mod refused, and a capped watcher polling the child's `busy`
-flag and its review file woke the parent 26 minutes later when it exited. Require the
+and it is cheaply re-armable — chain watchers across a long job. Observed once when the mod refused to register: a capped watcher polling the child's `busy`
+flag and its review file woke the parent when it exited. Require the
 deliverable **and** a few consecutive idle polls, since a Pi child reads `busy:false` while
 it auto-compacts.
 

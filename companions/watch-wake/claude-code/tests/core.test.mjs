@@ -69,6 +69,14 @@ function harness(opts = {}) {
   }
 }
 
+test('register refuses a session id that could change the API path (dot segments, separators)', async () => {
+  const h = harness()
+  for (const bad of ['..', '.', 'a/b', '../x', 'a\\b', '?x']) {
+    await assert.rejects(h.core.register({ sessionId: bad, conditions: COND, message: 'x' }, {}), /session_id/)
+  }
+  assert.equal(h.server.state.calls?.length ?? 0, 0)
+})
+
 test('interpolate fills every placeholder', () => {
   const out = interpolate('{{sessionId}} {{conditionId}} {{eventType}} {{firingCount}} {{firedAt}}', { conditionId: 'done', eventType: 'agent_end', firedAt: 0 }, 's1', 3)
   assert.equal(out, 's1 done agent_end 3 1970-01-01T00:00:00.000Z')

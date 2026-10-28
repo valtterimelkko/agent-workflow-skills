@@ -81,7 +81,7 @@ failed, cleared, idle and unknown; capability-gate support per runtime.
 |---|---|
 | Pi | Extension-backed. Start receipt ends at the command boundary, while later goal runs continue separately. Pause/status commands work while busy; the API pause uses immediate `/goal pause-now`. |
 | Claude | Native goal plus bounded server auto-continuation. One query may remain active until the goal settles. Pause disarms the nudger; abort without pause can relaunch it. |
-| Command Code | Goal control is honoured at the next prompt/stop boundary by its mod. Prefer deterministic verification when available. |
+| Command Code | Goal control is honoured at the next prompt/stop boundary. Prefer deterministic verification when available. |
 | Antigravity (1.38.0) | Fully server-side goal manager: sweeper verifies each completed turn (`verifyCommand` exit code, or the `GOAL_STATUS: ACHIEVED` self-report sentinel) and dispatches continuation prompts while unmet, bounded by `maxTurns`. `/goal …` text at the prompt boundary is intercepted, even while busy. |
 | OpenCode | No standard goal endpoint support; do not infer support from a separate plugin. |
 
@@ -213,7 +213,7 @@ an owned watch for a new phase; do not refresh a live watch merely to check it.
   1.52.0–1.59.x the drain waits for them, and a cut-off turn fires the goal watch with
   `interruptedByRestart` — resume or re-dispatch after reconciling.
 
-## Wave K: the server continues restart interruptions (contract ≥ 1.60.0)
+## Restart-interruption continuation (contract ≥ 1.60.0)
 
 On 1.60.0+ a **Pi** goal child whose run was cut off by a RESTART interruption — a restart
 or drain interruption, or a boot orphan — is continued ONCE by the server itself, at boot,
@@ -233,7 +233,7 @@ flight. You do nothing:
   `unsupported_runtime` (non-Pi goals, boot sweep only). THAT is the parent's queue:
   `POST /goal {"action":"resume"}` (works on the overlay) or re-dispatch.
 
-Everything else is unchanged by wave K: a provider abort mid-turn fails the goal exactly
+Everything else is unchanged by restart-interruption continuation: a provider abort mid-turn fails the goal exactly
 as before (the `goal_end {failed}` above), and so do budget, turn limits and question
 pauses — those were never the server's to continue.
 

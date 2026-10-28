@@ -327,6 +327,10 @@ export class WatchWakeManager {
 
 	async register(args: RegisterArgs): Promise<Registration & { status: 'watching' }> {
 		if (!args.sessionId?.trim()) throw new Error('sessionId is required');
+		// The id goes into a URL path: refuse anything that could change the route.
+		if (args.sessionId === '.' || args.sessionId === '..' || /[\/\\?#%\s]/.test(args.sessionId)) {
+			throw new Error('sessionId is not a valid session id');
+		}
 		if (!args.conditions?.length) throw new Error('at least one condition is required');
 		if (!args.message?.trim()) throw new Error('message is required');
 		// Refuse a condition whose shape can never match BEFORE any API call: the

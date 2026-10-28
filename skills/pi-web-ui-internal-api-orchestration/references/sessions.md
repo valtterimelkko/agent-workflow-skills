@@ -86,8 +86,7 @@ produced the default-first pattern. Prefer the former, and verify regardless.
 
 Why bindings drift at all: the Pi SDK restores history bindings only for sessions that
 already carry messages, so before 1.33.0 a session unloaded between create and dispatch
-rehydrated silently on the runtime default — a real 6-of-8 benchmark drift incident on
-2026-09-03.
+rehydrated silently on the runtime default — which silently moved a benchmark's sessions onto the wrong model.
 
 **Since contract 1.33.0 the verification shortcut is the run receipt**: every
 dispatch re-applies a drifted Pi binding before the turn and records

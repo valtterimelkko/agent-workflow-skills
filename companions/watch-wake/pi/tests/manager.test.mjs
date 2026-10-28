@@ -33,6 +33,14 @@ function makeManager(routes = [], wakeResult = true) {
 const conditions = [{ id: 'done', type: 'event_type', eventType: 'agent_end' }];
 
 describe('WatchWakeManager — register (watch the child, wake this host)', () => {
+  it('refuses a session id that could change the API path (dot segments, separators) before any API call', async () => {
+    const { manager, api } = makeManager([]);
+    for (const bad of ['..', '.', 'a/b', '../x', 'a\\b', '?x']) {
+      await assert.rejects(manager.register({ sessionId: bad, conditions, message: 'x' }), /sessionId/);
+    }
+    assert.equal(api.calls.length, 0);
+  });
+
   it('registers a server-side watch without onFire and baselines from firingCount', async () => {
     const { manager, api } = makeManager([
       { method: 'POST', path: '/api/v1/sessions/child-1/watch', status: 201, json: { watchId: 'watch-child-1', firingCount: 2, status: 'active' } },

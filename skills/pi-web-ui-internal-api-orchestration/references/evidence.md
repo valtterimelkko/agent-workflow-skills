@@ -125,6 +125,6 @@ fan-out monitoring, prefer Pi, OpenCode, or Antigravity.
 ### Child cards and unknown kinds
 
 A session's child cards (`GET /sessions/:id` `children`) have a `kind`. Since 1.41.0
-`background_shell` cards represent a Pi `bg_run` task (`bg_*` ids), not a session:
+`background_shell` cards represent a Pi background-shell task (`bg_*` ids), not a session:
 do not `GET /sessions/<bg_id>` or count them as workers. Tolerate kinds you do not know
 and skip them rather than failing the fan-in.

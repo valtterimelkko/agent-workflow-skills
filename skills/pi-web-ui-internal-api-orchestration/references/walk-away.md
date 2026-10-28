@@ -41,8 +41,8 @@ progress between events. On contract ≥ 1.60.0 a walking-away parent of a **Pi*
 goal child can also leave restarts to the server: a restart interruption continues once
 by itself (`goal_state` + top-level `autoContinued: true`, never a `goal_end`),
 and only a visible stop arrives as `goal_state` `paused` + `pausedReason:
-"interrupted"` — watch forms and the parent's queue in `goals.md` § Wave K. A
-provider-aborted goal is not continued: it fails exactly as before wave K.
+"interrupted"` — watch forms and the parent's queue in `goals.md` § Restart-interruption continuation. A
+provider-aborted goal is not continued: it fails exactly as it did before 1.60.0.
 
 **If the PARENT runs under a goal (Pi coding agent only):** do independent work
 while it remains; pause before actually idling — `goal` tool, action `pause`, reason `"supervising
@@ -123,10 +123,9 @@ POST /api/v1/sessions/<CHILD_ID>/watch
 - **Bare-CLI parents** (a terminal process the server cannot prompt): use the
   `watch-wake` Pi extension (the watch-wake companion, `companions/watch-wake/`, tools
   `watch_wake_register/list/cancel` — polls the ledger in-process, steers a
-  busy host, and starts an idle host via followUp+triggerTurn) or the Command Code mod
-  (the Command Code variant in the same companion, parks the run in the built-in `sleep` tool and
-  wakes via `queueMessage` follow-up; it cannot start a fully idle run — park,
-  don't exit).
+  busy host, and starts an idle host via followUp+triggerTurn). There is no published
+  Command Code port: a Command Code parent has no way to start an idle run, so it must
+  park inside a long-running tool call (for example a capped `sleep`) rather than exit.
 - **Bare Claude CLI: the `watch-wake` mod (primary, live-validated).**
   `mcp__watch-wake__watch_wake_register` registers the pure-observer watch on
   the child and wakes a fully idle `claude` CLI with a new turn;
@@ -287,12 +286,11 @@ one durable worker — see **Batch processing** under *Orchestration patterns* i
 **Choosing the condition — what each trigger actually promises.** Agents
 register watches themselves, so pick deliberately:
 
-> **Condition `type` is the predicate kind, never the event name (2026-10-04
-> incident).** A live parent registered `{"id":"done","type":"goal_end"}` and
+> **Condition `type` is the predicate kind, never the event name.** A live parent registered `{"id":"done","type":"goal_end"}` and
 > `{"type":"goal_state", …}`/`{"type":"text_match", …}` — every condition an
 > unknown type. Pre-fix servers accepted them (201) and the watch could never
 > fire: four goal children achieved, firingCount stayed 0, and the parent
-> blamed a restart that was coincidental. Since the 2026-10-04 server fix such
+> blamed a restart that was coincidental. On current servers such
 > registrations fail fast with a 400 that spells out the correct shape: the
 > valid types are exactly `event_type`, `tool`, `text`, `deadline`; the event
 > name (`goal_end`/`goal_state`/`agent_end`) is the **`eventType` field** of an

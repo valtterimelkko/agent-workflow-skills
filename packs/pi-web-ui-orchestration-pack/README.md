@@ -33,8 +33,7 @@ credentials out of everything you publish.
   if you prefer it. The orchestration skill's `references/pi-orch.md` covers the
   verbs, goal budgets, owner ids, waiting patterns, route caps and exit codes.
 - **For a bare CLI parent (Claude Code or Pi you started yourself): the [`watch-wake` companions](../../companions/watch-wake/README.md).** They are what lets the parent end its turn after dispatching and be woken when a child finishes; the waiting skill assumes them (and describes the plain fallback when they are absent).
-- No Agent OS, no cloud account, no orchestration server, and no extra
-  infrastructure.
+- No cloud account, no orchestration server, and no extra infrastructure.
 
 ## The four skills
 
@@ -95,13 +94,11 @@ cp -r agent-workflow-skills/skills/secret-scanning                      <your-sk
 
 - **Host-specific tooling.** The pack documents the method, not the author's
   machine: there is no board/coordinator server, no notification relay, no
-  scheduler, no model routing table, no provider credentials, and no custom
-  harness extension or mod. Where a step benefits from one (a watch-wake
-  extension, a background-shell tool, a notification path), the skill states
-  the plain fallback.
-- **Agent OS.** A private coordination layer the author uses for shared memory
-  and cross-agent presence; **not required**, and nothing in this pack depends
-  on it.
+  scheduler, no model routing table and no provider credentials. The optional
+  watch-wake extension and mod are published separately as code in
+  [`companions/watch-wake`](../../companions/watch-wake/README.md). Where a step
+  benefits from other tooling (a background-shell tool, a notification path),
+  the skill states the plain fallback.
 - **Pi Web UI itself and `pi-orch`.** Both are separate repositories (linked
   below), not vendored here.
 - **Live validation.** Proving a change to Pi Web UI works belongs to Pi Web
@@ -124,7 +121,7 @@ public use:
 - `pi-web-ui-internal-api-orchestration` and `long-horizon-waiting-strategies`
   keep their canonical names; host-specific routing, subscriptions, private
   repositories and incident details have been removed or generalised.
-- `orchestrated-child-worker` is the public form of the canonical
-  `agent-os-child` skill, with all Agent OS mechanics removed.
+- `orchestrated-child-worker` is the public form of the author's private
+  child-worker skill, with the coordination-layer mechanics removed.
 - `secret-scanning` is the canonical secret-scanning skill, with host paths
   generalised.

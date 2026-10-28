@@ -37,7 +37,7 @@ rules ("Operator rule (hard): no upstream patches"), not permission stories (§7
 * **External Submissions & Communications**: Publishing PRs upstream, public channels, or sending messages outside configured notification scripts.
 * **Departing from worktree isolation**: the operator's standing rule is an isolated git worktree per concurrent writer. Running concurrent writers in one shared tree, or any other departure from that rule, is the operator's call.
 * **Production restarts and deploys**: restarting or redeploying a live service (the one that hosts your orchestration) needs the operator's authority — either given for the programme up front (record the words) or asked for at the time. Execution approval does not imply deployment approval.
-* **Patching upstream or vendored dependencies**: `postinstall` patches, edits under `node_modules`, forks or vendored copies of upstream code. Upstream updates must not be able to silently break your processes, so prefer a runtime fallback plus a test pinning the validated upstream version, and ask before any patch. Observed: a parent approved a child's upstream patch as "precedent"; the operator reversed it and the patch had to be restored from pristine files by hash. Surface every deviation from upstream in the operator report — never bury it in a lane summary.
+* **Patching upstream or vendored dependencies**: `postinstall` patches, edits under `node_modules`, forks or vendored copies of upstream code. Upstream updates must not be able to silently break your processes, so prefer a runtime fallback plus a test pinning the validated upstream version, and ask before any patch. Never approve a child's upstream patch as precedent; ask the operator. Surface every deviation from upstream in the operator report — never bury it in a lane summary.
 * **Fundamental Architectural Pivots**: Changing the core tech stack or deviating from locked roadmap decisions.
 * **Blockers & Resource Exhaustion**: Hard quota limits, unresolvable merge conflicts, or ambiguous specifications that cannot be adjudicated from context.
 
@@ -87,7 +87,7 @@ hosted inside the server process and would kill itself mid-turn. The parent does
 
 ### Pre-Restart Safety Gate
 
-Drain-then-restart is shipped (B4, contract 1.51.0; B4.1, 1.52.0). The drain is the gate: it closes admission, waits for active turns, nonterminal run receipts **and** (1.52.0+) every busy session, then restarts.
+Drain-then-restart is shipped (contract 1.51.0; refined in 1.52.0). The drain is the gate: it closes admission, waits for active turns, nonterminal run receipts **and** (1.52.0+) every busy session, then restarts.
 
 1. **Coordination check**: no other agent is mid-deploy or depends on the service right now (your shared task surface, if you have one, is the fastest read).
 2. **Know what the drain can see**: read `contract.contractVersion` from `/capabilities`.
@@ -183,11 +183,11 @@ All user-facing updates from the orchestrator go through one configured notifica
     4. Entire programme complete & pushed (`done`).
   - **Anti-Pattern**: Do NOT poll terminals or send updates for line-by-line tool activity. The operator wants milestone progress, not a running terminal log.
 
-## 7. Claude Parents Dispatching Into Pi Children (2026-09-24 note)
+## 7. Claude Parents Dispatching Into Pi Children
 
 For a Claude parent driving Pi children through this API (Claude children are SDK-only, `CLAUDE_BACKEND_NOT_ALLOWED` otherwise; `claude-code-orchestrator.md`):
 
-- **Keep child briefs in files** (a path under the coordination or vault
+- **Keep child briefs in files** (a path under your coordination
   directory) and dispatch with a short, neutral prompt pointing at the brief
   file. The prompt travels through provider safety classifiers; the brief
   file does not.

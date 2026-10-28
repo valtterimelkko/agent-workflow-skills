@@ -57,7 +57,7 @@ reconcile on wake.** Read the matching reference **before that harness's first
 long wait**.
 
 - **Pi** (Pi Coding Agent CLI or a Pi SDK host): the watch-wake companion
-  ([`../../companions/watch-wake/`](../../companions/watch-wake/)) provides
+  ([`companions/watch-wake`](https://github.com/valtterimelkko/agent-workflow-skills/tree/main/companions/watch-wake/)) provides
   `watch_wake_register`, `wake_deadline`, `watch_wake_list` and `watch_wake_cancel`.
   For command-shaped waits use **a background-shell tool if your harness has one,
   otherwise the harness's background execution (for Claude Code `run_in_background`
@@ -88,9 +88,9 @@ long wait**.
   not poll `manage_task` in a loop; end the turn immediately and let the reactive
   system message wake you.
   → [`references/antigravity-reactive-watcher-and-schedule.md`](references/antigravity-reactive-watcher-and-schedule.md)
-- **Command Code**: the watch-wake companion's Command Code mod parks the run in the
-  built-in `sleep` tool and wakes via a queued follow-up; it cannot start a fully idle
-  run, so park, don't exit.
+- **Command Code**: there is no published watch-wake port. A Command Code parent cannot
+  start a fully idle run, so it parks inside a capped `sleep` tool call and is woken by
+  a queued follow-up; park, don't exit.
 
 ## The pre-idle checklist — run it before EVERY idle window
 
@@ -101,7 +101,7 @@ long wait**.
 > exiting background watcher); a managed Claude session uses server `onFire` plus the
 > server `deadline` condition. **Antigravity**: the exiting background task
 > (`wait-watch.sh` via `run_command`, low `WaitMsBeforeAsync`) plus the native
-> `schedule` tool. **Command Code**: its watch-wake mod. See *Harness applicability*
+> `schedule` tool. **Command Code**: park in a capped `sleep` (no published watch-wake port). See *Harness applicability*
 > above before importing any named tool.
 
 Before you end your turn on any wait, answer all four out loud. If you cannot,
@@ -174,7 +174,7 @@ restart recovery and no inherited fork authority. Channel acceptance is not
 processing; a crash before accepted-state persistence may replay the wake. It
 never resumes a goal or decides whether a child succeeded. The tool contract itself
 is in the watch-wake companion's
-[`README`](../../companions/watch-wake/README.md).
+[`README`](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/companions/watch-wake/README.md).
 
 **Server-side variant.** A watch condition `{"type":"deadline","afterSeconds":N}` on the
 same watch is a model-free timer inside the server: it survives restarts (overdue at
@@ -261,7 +261,7 @@ under suspicion.
 
 The one documented incident was not a mechanism failure. An agent judged the backstop
 "optional" for one window, the primary wake chain failed silently that same window (a
-suppressed retry plus a wake that never surfaced), and it sat idle for about 3.5 hours
+suppressed retry plus a wake that never surfaced), and it sat idle for hours
 until the human noticed. The checkpoint: every actual waiting window has a verified,
 appropriate, normally model-free backstop.
 
@@ -285,7 +285,7 @@ so that a failed onFire chain cannot strand you*.
 
 When the waiting agent is a **bare `pi` or `claude` CLI** the server cannot prompt,
 `onFire` cannot reach you directly. Two shapes (the companion's
-[`README`](../../companions/watch-wake/README.md)):
+[`README`](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/companions/watch-wake/README.md)):
 
 - Point `watch_wake_register` at the child directly (pure-observer watch, polls the
   durable ledger, steers a busy host or starts an idle host via follow-up).
@@ -313,7 +313,7 @@ a self-cancelling backstop with must-not-miss completions. Reach for a backgroun
 
 - **Idle (default for an interactive parent):** register the wake with the `watch-wake` tool plus
   `wake_deadline` and **end your turn**. Never hold a foreground `pi-orch wait`: one child blocked a
-  turn for 35 minutes that way.
+  turn for over half an hour that way.
 - **`pi-orch watch <sid> register|list|delete`** never waits. `register` creates a server-side
   pure-observer watch (no `onFire`) and prints its id: **not a wake by itself**, and on a Claude Code
   parent a foreign watch makes the mod refuse to register its own. Use it only where something else
@@ -501,8 +501,7 @@ Two more discriminations the table implies:
   on a legitimate path, not handing back. Check for its running background job before
   treating the end as a hand-back or a stall. `orchestrated-child-worker` now tells children not to
   do this, and to start any early stop with `NOT FINISHED:`; treat such a message as
-  progress, not a hand-back. (In the historical audit, 22% of child sessions ended a turn
-  this way.)
+  progress, not a hand-back. (In audited sessions this was common.)
 - **Pre-commit the stall response before you idle.** Write into your checkpoint what you
   will do and when: "if no further turn by 21:25 while its soak has finished, prompt it
   to finish (`follow_up`)"; "if the reviewer compacts again without its file, replace it
@@ -654,7 +653,7 @@ failure shapes are in
   every dispatched child is told to follow.
 - **[`secret-scanning`](../secret-scanning/SKILL.md)** — scan artefacts and repositories
   for credentials before publishing them.
-- **[`../../companions/watch-wake/README.md`](../../companions/watch-wake/README.md)** —
+- **[`companions/watch-wake/README.md`](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/companions/watch-wake/README.md)** —
   the watch-wake companion: `watch_wake_register/list/cancel`, `wake_deadline`, and the
   per-harness mods, with baselining and lifecycle edges.
 - Your harness's own background-execution docs — background task launch, wake delivery,
@@ -674,5 +673,5 @@ The reference split and its mandatory/situational rule are described in
 - **Pi Web UI** — https://github.com/valtterimelkko/pi-web-ui (docs:
   `docs/ORCHESTRATION-OVERVIEW.md`, `docs/INTERNAL-API-ORCHESTRATION.md`).
 - **pi-orch** — https://github.com/valtterimelkko/pi-orch.
-- **The pack** — [`../../packs/pi-web-ui-orchestration-pack/README.md`](../../packs/pi-web-ui-orchestration-pack/README.md).
-- **The watch-wake companion** — [`../../companions/watch-wake/`](../../companions/watch-wake/).
+- **The pack** — [`packs/pi-web-ui-orchestration-pack/README.md`](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/packs/pi-web-ui-orchestration-pack/README.md).
+- **The watch-wake companion** — [`companions/watch-wake`](https://github.com/valtterimelkko/agent-workflow-skills/tree/main/companions/watch-wake/).

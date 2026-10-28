@@ -25,9 +25,9 @@
 
 Unknown flags are a usage error (exit 2, before any request): a typo cannot silently change what a child receives. `wait --slice` is a deprecated no-op.
 
-## Lane runner (kept 2026-10-13: the default for single-repo lanes with a machine-checkable `GATES:` block; hand-run anything else)
+## Lane runner (the default for single-repo lanes with a machine-checkable `GATES:` block; hand-run anything else)
 
-`pi-orch lane run <lane-dir>`: spawn → watch → dispatch → wait → `GATES:` → one correction → cross-family review → one closure. Run it as a background process whose exit is the wake (Claude Code `run_in_background`, Pi `bg_run`, Antigravity `run_command`), with a backstop; `--dry-run` first.
+`pi-orch lane run <lane-dir>`: spawn → watch → dispatch → wait → `GATES:` → one correction → cross-family review → one closure. Run it as a background process whose exit is the wake (Claude Code `run_in_background`, a Pi background-shell tool, Antigravity `run_command`), with a backstop; `--dry-run` first.
 
 Lane dir: `lane.json` (template in `assets/programme-kit/`), `brief.md` ending in `GATES:`, `review-brief.md` with a `VERDICT FILE: <path>` line, optional `correction-template.md`.
 

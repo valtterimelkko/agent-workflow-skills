@@ -111,5 +111,5 @@ exec gitleaks git --pre-commit --staged --redact
 5. An independent reviewer re-runs the scan before the first public push.
 
 This skill is the pre-publication check used by the
-[Pi Web UI orchestration pack](../../packs/pi-web-ui-orchestration-pack/README.md): scan the
+[Pi Web UI orchestration pack](https://github.com/valtterimelkko/agent-workflow-skills/blob/main/packs/pi-web-ui-orchestration-pack/README.md): scan the
 artefacts a wave produced before they leave the machine.

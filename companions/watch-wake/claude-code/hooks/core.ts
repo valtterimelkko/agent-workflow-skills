@@ -315,6 +315,10 @@ export class WatchWakeCore {
   ): Promise<Registration> {
     const sessionId = String(args.sessionId ?? '').trim()
     if (!sessionId) throw new Error('session_id is required')
+    // The id goes into a URL path: refuse anything that could change the route.
+    if (sessionId === '.' || sessionId === '..' || /[\/\\?#%\s]/.test(sessionId)) {
+      throw new Error('session_id is not a valid session id')
+    }
     if (ctx.selfSessionId && sessionId.includes(ctx.selfSessionId)) {
       throw new Error('refusing to watch your own session: an idle session emits no events — watch the CHILD')
     }

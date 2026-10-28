@@ -53,7 +53,7 @@ Managed Claude parent: use server `onFire` plus a `deadline` condition instead (
 
 1. Spawn as above.
 2. `watch_wake_register` (same arguments as the mod) before dispatch.
-3. Backstop: `wake_deadline` (one slot per session). Command-shaped waits: `bg_run` with `backstop_s`; do not peek at its output, you are woken on exit.
+3. Backstop: `wake_deadline` (one slot per session). Command-shaped waits: a background-shell tool if your harness has one (otherwise the harness's background execution) with its own time cap; do not peek at its output, you are woken on exit.
 4. Dispatch, idle, on-wake, verify and cleanup as above.
 
 **Antigravity** (arm everything before the work can start):
