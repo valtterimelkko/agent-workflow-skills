@@ -1,0 +1,19 @@
+{
+  "lane": "<lane>",
+  "cwd": "<absolute worktree path>",
+  "owner": "orch-<programme>-<parentShort8>-<lane>",
+  "implementer": {
+    "runtime": "pi",
+    "selector": "<live Class 1 selector, e.g. a cheap fast model's selector>",
+    "thinking": "high"
+  },
+  "reviewer": {
+    "runtime": "<a different family's runtime>",
+    "selector": "<live selector from that family>",
+    "thinking": "medium"
+  },
+  "mode": "prompt",
+  "ttlSeconds": 14400,
+  "parentSessionId": "<your session id>",
+  "maxCorrections": 1
+}

@@ -17,9 +17,8 @@ But linked children are full supervision targets: `child_dispatched` publishes
 on the parent's broker key and browser surface, and `child_turn_ended` is
 watchable via the normal watch surface — exactly as for create-time children.
 
-Canonical server-side reference: the *Session adoption* section of the
-[Pi Web UI Internal API documentation](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/INTERNAL-API.md)
-(contract 1.40.0).
+Canonical server-side reference: the *Session adoption* section of the Pi Web
+UI repo's `docs/INTERNAL-API.md` (contract 1.40.0).
 
 ## The operator gate — read this before any adoption
 
@@ -63,11 +62,11 @@ A Pi session the web UI loaded while a CLI owned its lease stays **fenced**:
 input swallowed, goal mutations refused. From contract 1.45.0 the API handles
 both outcomes mechanically on the next prompt/goal/control action:
 
-- **Live foreign owner** → `409 SESSION_OWNED_BY_OTHER_RUNTIME` with
+- **Live foreign runtime holding the lease** → `409 SESSION_OWNED_BY_OTHER_RUNTIME` with
   `ownerPid`, `ownerMode`, `reason` — no run is created and nothing is touched.
   Stop the other runtime or do an intentional `/autocompact75 handoff` +
   `/autocompact75 claim` transfer, then retry.
-- **Dead owner** (including a recycled pid — liveness is proven by pid AND the
+- **Dead lease holder** (including a recycled pid — liveness is proven by pid AND the
   lease's recorded process-start identity, and uncertain evidence fails
   closed) → the API **recovers automatically** (dispose→rehydrate, pins
   preserved, model binding re-applied) and the action proceeds.
@@ -134,14 +133,14 @@ POST /api/v1/sessions/:id/adopt
 
 ```text
 POST /api/v1/sessions/adopt-native
-{"runtime": "claude", "nativeId": "<native-id>", "cwd": "/path/to/project",
+{"runtime": "claude", "nativeId": "<uuid>", "cwd": "/work/project",
  "parentSessionId": "<parent>", "alias": "worker-1", "role": "scout"}
 ```
 
 - `runtime` — one of `claude`, `commandcode`, `opencode`, `antigravity`. `pi`
   is rejected (auto-discovered; adopt a registered pi session via `/adopt`).
 - `nativeId` — the **bare artefact base name** (claude/commandcode/antigravity
-  identifier, opencode `ses_*`). Path separators and `..` are refused, and every
+  UUID, opencode `ses_*`). Path separators and `..` are refused, and every
   candidate path is containment-checked against its runtime root before any
   read.
 - `cwd` — optional; narrows the artefact search to that project directory
@@ -171,13 +170,16 @@ API remains the canonical contract surface.
 - The native transcript is never modified by adoption and is retained on
   registry delete — the operator's history survives cleanup of your entries.
 
-## Coordination notes for adopted children
+## Coordination hierarchy for adopted children
 
-Adoption links only the Pi Web UI registry tree. If your wider harness has
-another coordination surface, record a one-line task/owned-paths note for each
-adopted child in your hand-back or coordination directory. Keep the registry
-`parentSessionId` as the source of truth for Pi Web UI nesting; do not create a
-second hierarchy that can drift.
+Adoption links the Pi Web UI registry tree only. If you run a separate coordination layer, a
+child recorded there without parentage renders as a flat top-level worker, so with several
+adopted children running the orchestrator's fan-out becomes unreadable exactly when the
+nesting matters. Record each adopted child with an explicit parent link: the child's
+**internal** session id (so the record merges onto the registry-backed entry instead of
+minting a twin), the parent's own **entry id from that layer** (not a Pi Web UI session id),
+and a provenance note saying the dispatcher wrote it. Without such a layer, skip this — the
+registry `parentSessionId` is the whole hierarchy.
 
 ## Worked example
 
@@ -201,7 +203,7 @@ api "$API_BASE/sessions/native?runtime=claude&limit=20" \
 # 4. Adopt it under your session (body parent or X-Parent-Session)
 api -X POST "$API_BASE/sessions/adopt-native" \
   -H "X-Parent-Session: $PI_SESSION_ID" \
-  -d '{"runtime":"claude","nativeId":"<native-id>","cwd":"/path/to/project","alias":"worker-1"}'
+  -d '{"runtime":"claude","nativeId":"<native-uuid>","cwd":"/work/project","alias":"worker-1"}'
 # → {"success":true,"sessionId":"<internal-id>","runtime":"claude",
 #    "parentSessionId":"…","adopted":"created","nativePath":"…","alias":"worker-1"}
 
@@ -210,6 +212,6 @@ api -X POST "$API_BASE/sessions/<internal-id>/prompt" \
   -d '{"message":"…","verbosity":"answers","detach":true}'
 ```
 
-Validation evidence: [`live-validate-adopt.mjs`](https://github.com/valtterimelkko/pi-web-ui/blob/master/scripts/live-validate-adopt.mjs)
-(18/18 checks on a disposable server) and the cross-runtime parent-child
-adoption E2E ([`live-validate-parent-child-e2e.mjs`](https://github.com/valtterimelkko/pi-web-ui/blob/master/scripts/live-validate-parent-child-e2e.mjs)).
+Validation evidence: `scripts/live-validate-adopt.mjs` (18/18 checks on a
+disposable server, in the Pi Web UI repo) and the cross-runtime parent-child
+adoption E2E (`scripts/live-validate-parent-child-e2e.mjs`).

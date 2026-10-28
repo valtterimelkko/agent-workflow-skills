@@ -8,22 +8,21 @@ Four pieces combine into "dispatch and check back later":
 
 **Retention** keeps the session alive. `durable` preserves recoverability;
 `resident` additionally holds a runtime keepalive claim. Leases default to 24h,
-cap at 7d, persist through restart, and expire as crash safety. Several clients
-may hold different leases on one session — release only the exact lease id held by
-your caller. API and watch claims do not consume the Web UI's five-per-runtime human
+cap at 7d, persist through restart, and expire as crash safety. Several callers
+may hold different leases on one session — release only the exact lease id you
+own. API and watch claims do not consume the Web UI's five-per-runtime human
 pin slots, and deleting a watch cannot clear an API or UI claim. Retention is
 **not** an execution permit: preflight `/capacity`, but the prompt route remains the final
 admission authority.
 
-**Capacity trap — `ADMISSION_CAPACITY_EXHAUSTED` from leaked validation servers.** Disposable
-validation runs (`npm run validate:server` / `scripts/validation-server.ts`) can leak background
-processes; once the host task limit is exhausted, the admission controller refuses otherwise-idle
-turns with `ADMISSION_CAPACITY_EXHAUSTED`. Diagnosis: `GET /capacity` reports
-`reason: "pid_pressure"` while sessions and slots look free. Fix: stop exactly the leaked
-validation-server processes you started (by PID or process group, with your process supervisor;
-never a blanket `pkill` by name, because other agents' disposable servers and proofs share the
-host, and a disposable server started with the production service's inherited placement
-variables can sweep production's tools root), not the service, then re-check `/capacity`.
+**Capacity trap — `ADMISSION_CAPACITY_EXHAUSTED` from leaked disposable servers.** A validation
+run you started can leak background processes into the hosting service's cgroup; once its task
+limit is exhausted, the admission controller refuses otherwise-idle turns with
+`ADMISSION_CAPACITY_EXHAUSTED`. Diagnosis: `GET /capacity` reports a pid-pressure reason while
+sessions and slots look free. Fix: stop exactly the processes you started (by the PID or process
+group you recorded; never a blanket `pkill` by name, because other agents' disposable servers and
+proofs share the host — and a disposable server that inherits production's placement variables can
+sweep production's tools root), then re-check `/capacity`.
 
 **Detached dispatch** starts the turn and returns immediately (above).
 
@@ -92,9 +91,10 @@ POST /api/v1/sessions/<CHILD_ID>/watch
 - Works cross-runtime in both directions: the child (watch subject) and the
   wake target may each be any managed session — pi, claude, opencode,
   antigravity, **or commandcode** (contract 1.23.0 added Command Code
-  subjects; requires a server running ≥ 1.23.0). Live validation has confirmed
-  that an antigravity child's `agent_end` can fire the watch and deliver a wake
-  turn to an antigravity parent session. A bare-Claude CLI parent
+  subjects; requires a server running ≥ 1.23.0). Live-validated end-to-end for
+  antigravity (contract 1.37.0): an antigravity child's `agent_end`
+  fired the watch and the wake turn was delivered to and answered by an
+  antigravity parent session. A bare-Claude CLI parent
   cannot be an `onFire` **target** — no in-process wake mechanism the server
   can reach — but do not read that as "cannot use watches". It can register and
   read them as an **observer**; see *Bare-CLI parents* below.
@@ -106,7 +106,7 @@ POST /api/v1/sessions/<CHILD_ID>/watch
   Successful attempts report `deliveryKind` (`turn`, `steer`, or
   `deferred-follow-up`). A busy-parent steer wake holds no execution permit
   and is immune to slot exhaustion (only the emergency memory floor refuses
-  it, `503`), so a capacity-full board does not starve wake delivery — but an
+  it, `503`), so a capacity-full host does not starve wake delivery — but an
   idle-promoted turn is admission-checked like any new turn.
 - Policy: `maxWakeups` (default 1) counts dispatched outcomes and permanent
   failures. A transient failure is free and gets one bounded in-memory retry
@@ -115,22 +115,24 @@ POST /api/v1/sessions/<CHILD_ID>/watch
   wake. `{{evidence}}` needs `includeEvidence:true` (child-controlled text;
   excluded by default).
 - Self-target is a `400`; missing target a `404`. After a server restart an
-  `active` watch **rehydrates at boot**: broker subscription, pins and runtime
-  observer are restored, and a completion-type watch whose subject settled during
-  downtime records a reconciled firing — no re-registration needed. Only
-  unresolvable persisted conditions reload `detached` (re-register to resume).
-- **Bare-CLI parents** (a terminal process the server cannot prompt): use a
-  `watch-wake` extension for your harness (`watch_wake_register/list/cancel` —
-  polls the ledger in-process, steers a busy host, and starts an idle host via
-  `followUp` + `triggerTurn`) or a `watch-wake` mod for Command Code (parks the
-  run in the built-in `sleep` tool and wakes via `queueMessage` follow-up; it
-  cannot start a fully idle run — park, don't exit).
-- **Bare Claude CLI: a `watch-wake` mod for your harness (primary).**
+  `active` watch **rehydrates at boot** (the watch-defect fix): broker
+  subscription, pins and runtime observer are restored, and a completion-type
+  watch whose subject settled during downtime records a reconciled firing —
+  no re-registration needed. Only unresolvable persisted conditions reload
+  `detached` (re-register to resume).
+- **Bare-CLI parents** (a terminal process the server cannot prompt): use the
+  `watch-wake` Pi extension (the watch-wake companion, `companions/watch-wake/`, tools
+  `watch_wake_register/list/cancel` — polls the ledger in-process, steers a
+  busy host, and starts an idle host via followUp+triggerTurn) or the Command Code mod
+  (the Command Code variant in the same companion, parks the run in the built-in `sleep` tool and
+  wakes via `queueMessage` follow-up; it cannot start a fully idle run — park,
+  don't exit).
+- **Bare Claude CLI: the `watch-wake` mod (primary, live-validated).**
   `mcp__watch-wake__watch_wake_register` registers the pure-observer watch on
   the child and wakes a fully idle `claude` CLI with a new turn;
-  `mcp__watch-wake__wake_deadline` is its backstop. Use the public Internal API
-  contract at https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/INTERNAL-API.md
-  and `long-horizon-waiting-strategies` for mechanics and recovery limits.
+  `mcp__watch-wake__wake_deadline` is its backstop. Internal API side:
+  `references/claude-code-orchestrator.md`; mechanics and limits:
+  `long-horizon-waiting-strategies/references/claude-code-watch-wake-and-background-watcher.md`.
 - **Bare Claude CLI fallback: still use the watch as an observer.**
   Without the mod nothing can deliver a wake into a bare Claude CLI, so
   `onFire` is unavailable to it. That is a delivery limit, **not** a reason to
@@ -153,9 +155,9 @@ POST /api/v1/sessions/<CHILD_ID>/watch
 
 - **Bare Antigravity CLI / IDE: pure-observer watch + exiting background task (`run_command`) + native `schedule` backstop.**
   Bare Antigravity (`agy` CLI or IDE session) cannot be an `onFire` push target directly (its lifecycle hooks in `hooks.json` are synchronous interceptors, not background turn injectors). However, Antigravity has first-class native harness primitives for both sides of the pattern:
-  1. **Primary wake (canonical persistent watcher)**: Register a pure-observer watch on the child (`POST /sessions/:id/watch` with **no** `onFire`). Launch your harness's `wait-watch.sh <watchId>` in the background via `run_command` with low `WaitMsBeforeAsync` (for example, `1000` ms). When the child finishes or the condition fires, `wait-watch.sh` exits (`exit 0`), and the harness can deliver a high-priority task-completion notification, reactively waking the parent model at zero token cost.
-  2. **Model-free backstop (`schedule` tool)**: Arm a native one-shot timer with `DurationSeconds` (for example, `1800`) and `TimerCondition: <taskId>` (pointing to the watcher task). When the watcher finishes early, the timer automatically self-cancels (`Timer cancelled: early-termination condition met`). If the watcher hangs or crashes, the timer fires at expiration and wakes the parent.
-  3. **Zero-token waiting discipline & anti-polling**: Crucially, **end your turn immediately with zero further tool calls**. Never run `tmux capture-pane`, `sleep`, or `manage_task(Action='status')` loops inside your turn. Peeking in-turn burns context, triggers compactions, and wastes quota. Follow your harness's watcher guidance and `long-horizon-waiting-strategies` for recovery.
+  1. **Primary wake (canonical persistent watcher)**: Register a pure-observer watch on the child (`POST /sessions/:id/watch` with **no** `onFire`). Launch `scripts/wait-watch.sh <watchId>` (inside this skill) in the background via `run_command` with low `WaitMsBeforeAsync` (`1000` ms). When the child finishes or condition fires, `wait-watch.sh` exits (`exit 0`), and Antigravity automatically delivers a `MESSAGE_PRIORITY_HIGH` completion notification, reactively waking the parent model at zero token cost.
+  2. **Model-free backstop (`schedule` tool)**: Arm a native one-shot timer with `DurationSeconds` (e.g. 1800) and `TimerCondition: <taskId>` (pointing to the watcher task). When the watcher finishes early, the timer automatically self-cancels (`Timer cancelled: early-termination condition met`). If the watcher hangs or crashes, the timer fires at expiration and wakes the parent.
+  3. **Zero-token waiting discipline & anti-polling**: Crucially, **end your turn immediately with zero further tool calls**. Never run `tmux capture-pane`, `sleep`, or `manage_task(Action='status')` loops inside your turn. Peeking in-turn burns context, triggers compactions, and wastes quota. Mandatory orchestrator playbook: `references/antigravity-orchestrator.md`. Details: `long-horizon-waiting-strategies/references/antigravity-reactive-watcher-and-schedule.md`.
 - **Bare-CLI interactive parent/child wake trap — `deferred-follow-up` that never arrives.** If a
   registered session is *also* live in an interactive CLI (e.g. pi running in a tmux pane), that
   runtime owns the session. A prompt dispatched at it — `POST /sessions/:id/prompt` or an
@@ -196,8 +198,8 @@ for wakes and keep text sentinels for "print it as a standalone line" escalation
 
 **Verify the wake and its recovery path.** Every primary wake chain has observed failure modes —
 a relay wake that never surfaces or `steer_pending` fan-in suppression
-(watches themselves rehydrate `active` after a server restart, with downtime
-reconciliation for completions). Contract 1.32.0 removes the old
+(watches themselves rehydrate `active` after a server restart since the
+watch-defect fix, with downtime reconciliation for completions). Contract 1.32.0 removes the old
 transient-failure budget burn and adds one bounded retry, but this is not a
 persistent scheduler. For waits
 that matter, arm one appropriate backstop alongside the primary. A loaded
@@ -234,15 +236,14 @@ Keep the opaque server generation separate from any local handle/cursor.
   known foreign/replaced watches and capability downgrade for a known CAS
   registration. Do not manufacture atomicity from an old timestamp/watchId.
 
-The canonical full contract lives in Pi Web UI's public
-[Internal API documentation](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/INTERNAL-API.md).
-A harness-specific `watch-wake` extension or mod may document its own tool and
-lifecycle contract separately. Code delivery and host activation are separate:
-capability-gate the server and check the actual local tool schema rather than
-assuming source is loaded.
+The canonical full contract lives in Pi Web UI's `docs/INTERNAL-API.md`; the
+local tool/lifecycle contract is the watch-wake companion's own README
+(`companions/watch-wake/`).
+Code delivery and host activation are separate: capability-gate the server and
+check the actual local tool schema rather than assuming source is loaded.
 
-**Fan-in — several children, one parent. Parallel orchestration is supported.**
-Run several children at once, give each its own watch
+**Fan-in — several children, one parent. Parallel orchestration is supported:
+start that from yes.** Run several children at once, give each its own watch
 targeting you, and return your turn. Budgets and cooldowns are held **per watch
 record**. Contract 1.32.0 deliberately adds one cross-watch backpressure rule:
 only one steer dispatch may be pending per target; another is recorded as
@@ -286,6 +287,19 @@ one durable worker — see **Batch processing** under *Orchestration patterns* i
 **Choosing the condition — what each trigger actually promises.** Agents
 register watches themselves, so pick deliberately:
 
+> **Condition `type` is the predicate kind, never the event name (2026-10-04
+> incident).** A live parent registered `{"id":"done","type":"goal_end"}` and
+> `{"type":"goal_state", …}`/`{"type":"text_match", …}` — every condition an
+> unknown type. Pre-fix servers accepted them (201) and the watch could never
+> fire: four goal children achieved, firingCount stayed 0, and the parent
+> blamed a restart that was coincidental. Since the 2026-10-04 server fix such
+> registrations fail fast with a 400 that spells out the correct shape: the
+> valid types are exactly `event_type`, `tool`, `text`, `deadline`; the event
+> name (`goal_end`/`goal_state`/`agent_end`) is the **`eventType` field** of an
+> `event_type` condition, and text watches use `type: "text"`. If a hand-built
+> registration is ever refused with 400, read the error before assuming a
+> server defect.
+
 - `{ "type": "event_type", "eventType": "agent_end" }` — **the safe default;
   prefer it.** Fires exactly once per child *turn*: a prompt containing five
   tasks yields one wake, after all five finish. It also fires when the child
@@ -304,9 +318,8 @@ register watches themselves, so pick deliberately:
 - Conditions OR together; each defaults to firing once. For "wake on completion
   OR early escalation", register `agent_end` **and** the sentinel.
 
-Full field reference: the Watch section of
-[Internal API documentation](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/INTERNAL-API.md)
-and the [long-horizon validation documentation](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/LONG-HORIZON-VALIDATION.md).
+Full field reference: `docs/INTERNAL-API.md` (Watch) and
+`docs/LONG-HORIZON-VALIDATION.md` in the pi-web-ui repo.
 
 **Notifications** tell the operator it's done, so nobody has to poll:
 
@@ -319,15 +332,14 @@ GET    $API_BASE/notifications
 GET    $API_BASE/notifications/:notificationId
 ```
 
-Optional: notify the operator through your harness's own notification path on
-its next `agent_end` — which is both "finished" and "stopped to ask a question",
-since those are the same event with different content. For milestones from your
-own tooling, emit explicitly:
+Opting a session in produces an operator notification on its next `agent_end` — which is
+both "finished" and "stopped to ask a question", since those are the same event
+with different content. For milestones from your own tooling, emit explicitly:
 
 ```http
 POST /api/v1/notifications
 Idempotency-Key: <uuid>
-{ "title": "Orchestration", "body": "Review requested", "deepLink": "/?session=abc" }
+{ "title": "Agent work", "body": "Review requested", "deepLink": "/?session=abc" }
 ```
 
 A durable acceptance returns `202` with `Location` and `{notification, duplicate,
@@ -336,7 +348,7 @@ it with a different payload returns `409 IDEMPOTENCY_KEY_CONFLICT`.
 
 Three edges that cause real confusion:
 
-- **`202` is queue acceptance, not channel delivery.** Poll the status URL or
+- **`202` is queue acceptance, not delivery.** Poll the status URL or
   `GET /notifications` — `pending` can persist while notifications are disabled
   or no channel is configured, and delivery is at-least-once. Never report
   "notified" from the `202` alone.

@@ -20,7 +20,7 @@ restart runbook and close-out — are in **`programme-kit.md`**. This file holds
 | Improvements form a dependency chain (later work needs an earlier interface stable) | **yes** — sequence into gated waves |
 | Several waves with fan-in, integration or review between them | **yes** |
 | Children (or the parent) write concurrently in shared repositories | **yes** — needs ownership contracts |
-| Another agent lineage owns overlapping scope (check the board) | **yes** — needs a collision boundary |
+| Another agent lineage owns overlapping scope (check your coordination surface) | **yes** — needs a collision boundary |
 | The supervision machinery itself is suspect (watch transport, goal lifecycle) | **yes** — plus a parent bootstrap wave |
 | One comparison, one batch, one fan-out of independent items | **no** — use `patterns.md`; this file adds nothing |
 
@@ -38,14 +38,14 @@ or restart instead of trusting recalled context.
 | **Per-child brief + evidence directory** | One brief per child; evidence grows | The child's contract and its proof (see below) |
 
 **Strategy document** — one authoritative file, never competing versions.
-Carries a **status header with an approval-gated lifecycle**:
-`PLANNING ONLY` → `READY, NOT STARTED` (the responsible operator endorses) → `EXECUTING` (the responsible operator
-activates execution). Planning performs no dispatch; that activation is the
-execution gate, and after it there is no redundant re-confirmation screen.
+Carries a **status header with an operator-gated lifecycle**:
+`PLANNING ONLY` → `READY, NOT STARTED` (operator endorses) → `EXECUTING` (operator
+activates execution). Planning performs no dispatch; the operator's activation is
+the execution gate, and after it there is no redundant re-confirmation screen.
 Amendments are **recorded in the file itself** ("latest amendment … supersedes
 …"), so there is exactly one current truth. Contents: authority (including what
 it does *not* permit), the **collision boundary** (what other active lineages
-own, derived from the board and their checkpoints), the **team allocation**
+own, derived from your coordination surface and their checkpoints), the **team allocation**
 (one bounded outcome + owned paths per child, plus a cap on concurrent
 implementation workers), the **execution waves** with their gates, non-regression
 gates, and stop/question boundaries. It **records scope, not completion**.
@@ -92,7 +92,7 @@ available children.
 
 1. **Evidence first.** Audit the session records/logs that motivated the work;
    derive a prioritised sequence from observed failures. Exclude anything owned
-   by other active lineages (board + their checkpoint) — steal nothing.
+   by other active lineages (coordination surface + their checkpoint) — steal nothing.
 2. **Wave 0 — parent bootstrap.** If the machinery the programme depends on
    (watch transport, goal lifecycle, wake delivery) is itself suspect, the
    parent repairs and TDD-proves it *before* any child starts, and commits the
@@ -111,7 +111,7 @@ available children.
    threshold waits for lane A's measurement; lane B's unrelated parts can start now), and
    **deploy order** (artefact X must be live before the restart that activates Y). Write
    each into the live checkpoint the moment you discover it.
-   **Crucial: sequence gating is parent-autonomous, not owner-gated.**
+   **Crucial: sequence gating is parent-autonomous, not operator-gated.**
    When the earlier work lands and the shared repository is clear, the parent
    un-gates the seam wave and dispatches immediately without asking the operator
    for permission. Do not escalate routine single-writer staging to the operator.
@@ -126,13 +126,13 @@ available children.
    again after each correction. Full pattern in *The reviewer child* below.
 7. **Reviewer live re-run lane (named, before the wave closes).** Code reviews and focused
    tests are not a live proof. The wave template carries a named lane in which a fresh
-   reviewer, not an executor of the steps, re-runs the wave's behavioural claims live: a
-   disposable server built from the integrated base, real extension copies, the approved
-   cheap route, contained as in the common brief, and a pass rule per arm fixed before
-   running. A failing arm becomes a correction lane. A wave that closes on code reviews
-   and focused tests alone tends to need this lane added afterwards; write it into the
-   wave plan up front, and do not call the wave shipped until it has run.
-8. **Review moments and interim waves.** When a review (yours or the owner's) finds that
+   reviewer, not an executor of the
+   steps, re-runs the wave's behavioural claims live: a disposable server built from the
+   integrated base, real extension copies, the approved cheap route, §4-style containment,
+   and a pass rule per arm fixed before running. A failing arm becomes a correction lane.
+   A wave that closes without it has to be followed by a late live proof; write the
+   lane into the wave plan up front, and do not call the wave shipped until it has run.
+8. **Review moments and interim waves.** When a review (yours or the operator's) finds that
    the plan's next wave would build on a defect, insert an **interim remediation wave**
    rather than folding the fixes into the next planned wave. Prefer the cheapest decisive
    proof for each fix (a synthetic or bounded run) over repeating a long validation; keep
@@ -159,11 +159,11 @@ success, a confinement hole, and eviction orphaning running children.
 **Sequence per lane:**
 1. Implementer hands back (`complete.md` plus evidence bundle).
 2. **You** read the diff and re-run the gates first; a defect you find goes back to the implementer as a correction **before** you spend reviewer tokens (a reviewer's time is for what you could not find).
-3. Create a **fresh** reviewer per lane, on a **different model family** from the implementer (route: `routing.md` → *Reviewer route*), and dispatch the review. Do not reuse the implementer, and do not reuse one reviewer across unrelated lanes. A closure round goes to the **same** reviewer session.
+3. Create a **fresh** reviewer per lane, on a **different model family** from the implementer (route: `routing.md` → *Use an independent reviewer*), and dispatch the review. Do not reuse the implementer, and do not reuse one reviewer across unrelated lanes. A closure round goes to the **same** reviewer session.
 4. Adjudicate the verdict yourself (below). Accept, or send one correction, then a closure review.
 
 **Create and dispatch:**
-- `POST /sessions` `{runtime:<the route's runtime>, model:<exact selector>, thinkingLevel:<highest advertised, e.g. "max">, cwd:<the implementer's worktree>, retention:{mode:"durable", ttlSeconds:<window+headroom>, ownerId:"<prog>-<lane>-reviewer"}}` (a Claude Code parent uses the `orch-<prog>-<parentShort8>-<lane>-reviewer` convention, `pi-orch.md`); verify `fallbackApplied:false` and the effective model (`sessions.md`).
+- `POST /sessions` `{runtime:<the route's runtime>, model:<exact selector>, thinkingLevel:<highest advertised, e.g. "max">, cwd:<the implementer's worktree>, retention:{mode:"durable", ttlSeconds:<window+headroom>, ownerId:"orch-<prog>-<parentShort8>-<lane>-reviewer"}}`; verify `fallbackApplied:false` and the effective model (`sessions.md`).
 - The prompt carries the `orchestrated-child-worker` directive (SKILL.md §3), the role line "you are a read-only reviewer", and the verdict format. Dispatch detached (`verbosity:"answers"`, `detach:true`, an `idempotencyKey`) and save the request and receipt.
 - Keep a reusable **reviewer brief file** and a short per-lane prompt (lane, worktree, branch, diff range, focus areas). Tell the reviewer that numbered `NN-answer.md` / `NN-correction.md` files amend the frozen brief, or it judges against stale criteria. Inputs the reviewer reads: the frozen lane brief plus numbered amendments, `complete.md` and the evidence bundle, the plan section, and `git diff <base>...HEAD`.
 - Ask for the deliverable as a **file** (`reviews/<lane>-review.md`) and end the turn. Read-only is enforced by the brief alone, so check `git status` is clean afterwards.
@@ -184,14 +184,14 @@ COMMANDS RUN: command → exit code
 1. Write an "independent review + parent adjudication" note: each finding confirmed, disputed, or already fixed, with your own RED evidence for the ones you uphold.
 2. Send the upheld findings to the **same implementer** as one bounded, numbered correction (`NN-correction.md`, TDD, RED evidence). Re-verify yourself.
 3. Send a closure prompt to the **same reviewer session** listing the earlier findings as CLOSED or OPEN with evidence, and ask it to look only at the delta.
-4. **Cap at two reviewer rounds** (the full review, then one closure round on the same reviewer session; in a closure round raise only a blocker or major as new). Anything still open after that goes back as one correction marked **FINAL**, verified by you only ("no round 3"); recurring bounded-work findings can otherwise loop forever.
+4. **Proportionality:** raise a finding only if it can change the decision; use a capability-strong, different-family reviewer for safety-critical code (cheap reviewers have missed a HIGH confirm-gate gap a stronger one caught); treat a fast "ACCEPT, no findings" from a cheap reviewer as weak; time-box the review. **Cap at two reviewer rounds** (the full review, then one closure round on the same reviewer session; in a closure round raise only a blocker or major as new). Anything still open after that goes back as one correction marked **FINAL**, verified by you only ("no round 3"); recurring bounded-work findings can otherwise loop forever. In practice that means two reviewer rounds per lane, then a parent-verified FINAL correction.
 
 **Gotchas seen in practice:**
 - **Compaction aborts the first turn.** On a large diff the reviewer crosses the auto-compaction threshold (~75% of context on Pi, `auto-compact-75`) and its turn ends silently as aborted; it resumes by itself. If that happened and the file is missing, **do not re-prompt**: wait for the resumed `agent_end` (25 min backstop). Every wake, including each compaction's `agent_end`, spends `max_wakes`.
 - **A prompt sent during compaction is accepted (202) and then fails** with a `RUNTIME_ERROR` receipt ("Cannot submit a prompt while compaction is in progress"), even though `busy` reads false.
 - If a reviewer compacts a second time, replace it with **two fresh reviewers on split scope**, and tell them to "keep this focused" to limit context use.
 - **Never re-register a watch with `replace`** while waiting; a held wake is dropped (`walk-away.md`).
-- Before the wave, check the provider's remaining quota in its own dashboard or CLI and choose a route that fits current capacity.
+- Check provider headroom before the wave.
 - **The reviewer is evidence, not the sign-off.** You still re-run everything; your acceptance stands on your own probes.
 
 For several parallel critiques of one draft (a document or plan, not a lane of code), use `patterns.md` (Reviewer fan-out).
@@ -207,23 +207,22 @@ For several parallel critiques of one draft (a document or plan, not a lane of c
 - **Symlinked dependencies are shared state**: children never install, patch
   dependencies or `git stash` in a worktree whose `node_modules` point at the main
   checkout — only the parent installs (`programme-kit.md`). Patching an upstream or
-  vendored dependency at all requires explicit approval (`orchestrator-governance.md` §1).
+  vendored dependency at all is operator-gated (`orchestrator-governance.md` §1).
 - Worktrees prevent file conflicts, **not semantic conflicts or resource
   contention** — where changes overlap semantically, sequence them anyway, and
   cap heavy validation (one disposable server / heavy suite at a time).
 - **Sibling agent concurrency on principal branch (`main`)**: If another agent or lineage
   is actively working on `main` in the target repository, all child execution
-  MUST happen in an isolated git worktree (`git worktree add ../<repo>-wt-<lane> <branch>`).
+  MUST happen in an isolated git worktree (`git worktree add <worktree root>/<lane> <branch>`).
   The child runs TDD and commits to its lane branch. The parent coordinates, independently
   verifies in the worktree, and delays merge to `main` until the sibling agent has settled,
   inspecting `git fetch` and manually resolving any interface drifts before merging and teardown.
-- **Test store isolation**: When children or parent test suites execute tools or tests
-  touching board/presence state (such as `runInject`), configure an isolated temporary
-  board store (`BOARD_STORE_DIR: tempRoots.mkdtemp(...)`). Never let automated test suites
-  write fixture session IDs into a live coordination store, which can pollute presence
-  reports with false zombie or duplicate-session findings.
+- **Test-state isolation**: when a suite touches live presence, task or registry state,
+  point it at a temporary store (an isolated temp directory injected through the layer's
+  own environment variable). Never let an automated suite write fixture ids into live production state,
+  where false zombie and singularity defects degrade what other agents read.
 - The parent owns shared docs, helpers, cross-repo integration and final
-  sign-off. Register children on the board (SKILL.md §3b) and read the board
+  sign-off. Record each child in your coordination surface (SKILL.md §3b) and read it
   again at every integration boundary.
 
 ## Correction cycles: acceptance is a verdict, not a receipt
@@ -251,14 +250,17 @@ For several parallel critiques of one draft (a document or plan, not a lane of c
 
 ## Supervision across waves
 
-- **Taking over from a dead or compacted parent**: recover the old session's record with your harness's own history tools, read the checkpoint and the strategy file, check live state yourself, then act. Never resume from memory of the plan.
+- **Taking over from a dead or compacted parent**: read the old session's hand-off digest
+  (or its last few turns), the checkpoint and the strategy file, check live state yourself,
+  then act. Never resume from memory of the plan.
 - **Log platform defects into the plan.** A defect you find while orchestrating (not in any
   lane's scope) becomes a finding recorded at the right plan step, not an off-plan fix.
   **Route a hazard found in any evidence bundle the same day**: into the plan (a new named
-  lane or step) and the defect ledger, with the mitigation in force until it ships. A
-  bundle that records, say, a disposable server sweeping production's tools root can sit
-  unowned for a whole wave until a reviewer is about to start its own servers. Read each
-  handed-back bundle's residual-risk and blind-spot lists for exactly this.
+  lane or step) and the defect ledger, with the mitigation in force until it ships. One
+  handed-back bundle recorded that a disposable server swept production's tools root and
+  killed other sessions' commands — twice — and because nobody routed it, it sat unowned for
+  a whole wave until a reviewer was about to start its own servers. Read each handed-back
+  bundle's residual-risk and blind-spot lists for exactly this.
 - **Refresh shared guidance at its actual phase.** Other agents may have moved
   a skill/document HEAD since planning. Read current files, intervening history
   and active ownership; merge the new learning rather than applying stale text.
@@ -277,22 +279,22 @@ For several parallel critiques of one draft (a document or plan, not a lane of c
 - **Pause your own goal while idling** (`goals.md` Part 2) and resume only when
   the waiting work has settled.
 - **Release finished children**: cancel their watches and release their
-  retention leases (confirm 200), leave their board entries, and stop counting
+  retention leases (confirm 200), close their coordination entries, and stop counting
   them as active — never watch a released child again.
 - **Bounded parallelism**: cap simultaneous implementation workers (two is a
   sound default) and count sleeping helper processes toward supervision and
   cleanup rather than hiding them.
-- The parent consolidates operator notifications and memory capture; children
-  hand back evidence only.
+- The parent consolidates operator notifications; children hand back evidence only.
 
-## Worked examples
+## The shape of a real programme
 
-- **Multi-lane interim wave**: a coordination directory outside the worktree held
-  common and lane briefs, a `STATE-interim.md` checkpoint, a time-stamped wake log,
-  numbered questions/answers/corrections, reviewer briefs and round-by-round reviews.
-  The best current reference for the kit is `programme-kit.md`.
-- **Orchestration-repair programme**: a strategy document, checkpoint, evidence tree
-  and session records were kept in a coordination directory outside the repository.
-  These are method examples, not claims that a particular review or deployment completed.
+Two worked programmes established the kit that `programme-kit.md` describes. One was an
+interim scaling wave run by a Claude Code parent: an operations directory outside every work
+tree, common and lane briefs, a `STATE-interim.md` holding the operator's authorisations, a
+lane table and a time-stamped wake log, numbered questions/answers/corrections per lane,
+reviewer briefs and round-by-round reviews. The other was a repair programme run by a Pi
+parent: one strategy document, one checkpoint, and an evidence tree per child. Both are
+method examples, not claims that their final review or deployment completed.
 
-Values in both are historical; open them for the *shape*, not current state.
+Copy the *shape*: one durable strategy file, one live checkpoint, one directory per child,
+one reviewer brief reused across lanes, and a numbering scheme shared per lane.

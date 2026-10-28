@@ -41,8 +41,8 @@ before the single `idle` that actually ends it.
    cost-sensitive work), read `receipt.servedModel` (model actually bound at
    dispatch) and `receipt.modelRebound` (true = a drift was detected and
    corrected before the turn). Never declare a model-comparison datapoint
-   complete without checking `servedModel` — an observed model-drift incident
-   produced wrong-model "clean" results that receipts would have caught.
+   complete without checking `servedModel` — the model-drift incident
+   produced two wrong-model "clean" results that receipts would have caught.
 4. `GET /sessions/:id/evidence` — canonical aliases, diagnostics, receipt
    summary, retention/residency counts, adapter materialisation, and a compact
    three-run chronology.
@@ -67,7 +67,7 @@ before the single `idle` that actually ends it.
    failed in seconds, not stalled; a `409 SESSION_OWNED_BY_OTHER_RUNTIME`
    means a live foreign runtime owns the session lease (read `ownerPid` /
    `ownerMode`, do not retry until it is resolved); `409 SESSION_FENCED` means
-   a dead-owner recovery was attempted and the session remained fenced (it
+   a dead-lease-holder recovery was attempted and the session remained fenced (it
    follows only a failed recovery, never a healthy handoff); and a
    goal call answered `409 GOAL_ACTION_NOT_APPLIED` means the command ran but
    the transition did not — read `observedGoal` and `extensionWarnings` before
