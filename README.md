@@ -4,6 +4,8 @@ A curated public collection of practical `SKILL.md` agent skills for AI-agent wo
 
 Most of these skills happen to be used inside coding-agent harnesses, but they are not only for coding. Many of them are for research, media, document workflows, qualitative analysis, web capture, and agent-operational design more broadly.
 
+> **The orchestration set.** The most-used material here is the **[Pi Web UI orchestration pack](./packs/pi-web-ui-orchestration-pack/README.md)** (four skills) together with the **[`watch-wake` companions](./companions/watch-wake/README.md)** (a Pi extension and a Claude Code mod that wake an idle parent when a child agent finishes). They are one half of a set: the other half is [Pi Web UI](https://github.com/valtterimelkko/pi-web-ui) (the server and local Internal API that gives every coding-agent harness one session model) and [`pi-orch`](https://github.com/valtterimelkko/pi-orch) (a thin parent client). Take them together: [how they fit and how to install them](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/ORCHESTRATION-FIXTURE-SET.md).
+
 ## Project story
 
 After Anthropic popularised the `SKILL.md` pattern, I started building my own private skills library to make real work faster and more reliable.
@@ -88,6 +90,11 @@ See [`packs/pi-web-ui-orchestration-pack/README.md`](./packs/pi-web-ui-orchestra
 - `orchestrated-child-worker` — the evidence-and-hand-back discipline every dispatched child follows
 - `secret-scanning` — scan repositories and artefacts for credentials before publishing
 
+The skills rely on a wake mechanism that is published separately as code, in [`companions/`](./companions/README.md):
+- [`companions/watch-wake`](./companions/watch-wake/README.md) — `watch_wake_register`, `wake_deadline` and friends for a bare Pi or Claude Code parent: register a watch on a child, end the turn, get woken at zero token cost, with a model-free deadline as backstop
+
+Related repositories: [Pi Web UI](https://github.com/valtterimelkko/pi-web-ui) · [`pi-orch`](https://github.com/valtterimelkko/pi-orch) · [orchestration fixture set guide](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/ORCHESTRATION-FIXTURE-SET.md)
+
 ### Document workflow skills
 - `docx-draft` — round-trip Word-to-markdown drafting while preserving document structure for rebuild
 - `pptx-draft` — round-trip PowerPoint-to-markdown drafting while preserving presentation structure for rebuild
@@ -155,6 +162,8 @@ skills/
   secret-scanning/
 packs/
   pi-web-ui-orchestration-pack/
+companions/
+  watch-wake/        Pi extension + Claude Code mod (code, not skills)
 shared/
 ```
 

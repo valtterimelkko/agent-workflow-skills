@@ -1,5 +1,7 @@
 # Pi Web UI orchestration pack
 
+> **Part of a set of four public repositories that work together:** [Pi Web UI](https://github.com/valtterimelkko/pi-web-ui) (server and Internal API) · [`pi-orch`](https://github.com/valtterimelkko/pi-orch) (thin parent client) · **this pack** (the discipline) · the [`watch-wake` companions](../../companions/watch-wake/README.md) (the wake mechanism). How they fit and the install order: [orchestration fixture set guide](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/ORCHESTRATION-FIXTURE-SET.md).
+
 Four agent skills for running multi-agent orchestration through **Pi Web UI**'s
 local Internal API — dispatching child sessions across runtimes, supervising
 them without polling, demanding evidence before acceptance, and keeping
@@ -30,6 +32,7 @@ credentials out of everything you publish.
   hand-written curl and `sleep` loops; the raw Internal API is fully documented
   if you prefer it. The orchestration skill's `references/pi-orch.md` covers the
   verbs, goal budgets, owner ids, waiting patterns, route caps and exit codes.
+- **For a bare CLI parent (Claude Code or Pi you started yourself): the [`watch-wake` companions](../../companions/watch-wake/README.md).** They are what lets the parent end its turn after dispatching and be woken when a child finishes; the waiting skill assumes them (and describes the plain fallback when they are absent).
 - No Agent OS, no cloud account, no orchestration server, and no extra
   infrastructure.
 
