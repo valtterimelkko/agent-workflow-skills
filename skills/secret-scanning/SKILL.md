@@ -1,6 +1,6 @@
 ---
 name: secret-scanning
-description: "Scan git repositories and directories for committed credentials with gitleaks, and keep credentials out of repos entirely. Use this skill before making any repository public, before the first push of a new repo, before publishing or copying evidence, logs, transcripts or skills into a repo, when adding secret scanning to CI or a pre-commit hook, when auditing an already-public repo's history, and whenever a task handled credential copies (auth.json, models.json with apiKey, tokens). Also use it when someone asks 'is this safe to publish?', 'did we leak a key?', or mentions gitleaks, secret scanning or credential hygiene."
+description: "Scan git repos and directories for committed credentials with gitleaks and keep credentials out of repos. Use before making a repository public, before a new repo's first push, before copying evidence, logs, transcripts or skills into a repo, when adding secret scanning to CI or a pre-commit hook, when auditing a public repo's history, and whenever a task handled credential copies (auth.json, models.json with apiKey). Also for 'is this safe to publish?', 'did we leak a key?', gitleaks."
 ---
 
 # Secret scanning
@@ -10,7 +10,7 @@ design rule comes first:
 
 > **Credentials live outside the repo tree.** Code reads them from paths or
 > environment variables that point outside the repository (for example
-> `~/.pi-web-ui/internal-api-token`), and should refuse a credential path that
+> `$HOME/.pi-web-ui/internal-api-token`), and should refuse a credential path that
 > resolves inside its own repo. `.gitignore` is only a backstop: one `git add -f`
 > or one renamed file defeats it.
 
@@ -55,15 +55,15 @@ Classify every finding. Most hits of the broad `generic-api-key` rule are harmle
 1. **Identifier false positive:** idempotency keys, UUIDs, digests, config words
    (for example `NoNewPrivileges`). Allowlist them.
 2. **Deliberate test fixture:** a fake key planted to test redaction. Prefer an
-   obviously fake shape (`sk-test-FAKE…`), and allowlist it.
+   obviously fake shape (`TEST-FAKE-…`), and allowlist it.
 3. **Possibly real:** anything else, especially in docs, scripts, logs or evidence.
-   Treat it as real until its owner confirms otherwise.
+   Treat it as real until the operator confirms otherwise.
 
 For a possibly real credential:
 - **Rotate or revoke it first.** Rewriting history does not un-leak a secret that
   was ever public: clones, forks and caches keep it.
-- Then tell the owner, with the location (file, line, commit), never the value.
-- Rewriting history (`git filter-repo`) and force-pushing are the **owner's
+- Then tell the operator, with the location (file, line, commit), never the value.
+- Rewriting history (`git filter-repo`) and force-pushing are the **operator's
   decision**. Never do them unasked.
 
 ## Allowlisting without hiding real leaks
@@ -109,3 +109,7 @@ exec gitleaks git --pre-commit --staged --redact
    empty temp dir).
 4. Add the CI job.
 5. An independent reviewer re-runs the scan before the first public push.
+
+This skill is the pre-publication check used by the
+[Pi Web UI orchestration pack](../../packs/pi-web-ui-orchestration-pack/README.md): scan the
+artefacts a wave produced before they leave the machine.

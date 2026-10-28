@@ -3,7 +3,7 @@
 > Read this when you are designing supervision for a dispatched child and need
 > the detailed signal tables, the full hand-back protocol, or the two
 > goal-shaped supervision cases. The condensed rules live in
-> `long-horizon-waiting-strategies/SKILL.md`.
+> [`../SKILL.md`](../SKILL.md) (the `long-horizon-waiting-strategies` skill).
 
 ## The liveness discriminator — independent-signal table
 
@@ -26,7 +26,8 @@ bundles session status, run receipts, and `runChronology`. If you lost the
 child's id entirely (next day, after a restart), rediscover it with
 `GET /api/v1/sessions?limit=20` — newest-first, restart-surviving registry —
 or `GET /api/v1/sessions/native` for direct-CLI runs of other runtimes
-(contract 1.30.0; both documented in the pi-web-ui-internal-api-orchestration
+(contract 1.30.0; both documented in the
+[`pi-web-ui-internal-api-orchestration`](../../pi-web-ui-internal-api-orchestration/SKILL.md)
 skill, §7).
 
 Two more things that matter in practice:
@@ -44,9 +45,9 @@ state only. So **convert the child's questions into observable state by
 instructing it to** in the dispatch brief. This is a protocol you impose, not a
 capability you go looking for, and it works on any repo, runtime or route:
 
-- **Put it in the brief by mandating `orchestrated-child-worker`.** That skill is not injected into
-  Internal API children; it carries the end-the-turn-to-hand-back rule, commit and
-  exit-status discipline and the reviewer role. Name it in every dispatch.
+- **Put it in the brief by mandating `orchestrated-child-worker`.** That skill is not
+  injected into Internal API children; it carries the end-the-turn-to-hand-back rule,
+  commit and exit-status discipline and the reviewer role. Name it in every dispatch.
 
 - Pick a coordination directory **outside** the work tree, and outside anything
   measured, hash-pinned or committed. A stray coordination file inside a measured
@@ -88,8 +89,8 @@ fired the moment it finished.
 ## Calibrating what the child may ask about
 
 The question-size rules (what a child may decide alone vs what it must ask
-about) live in `SKILL.md` §*Calibrate what the child may ask about* — treat
-that section as canonical; do not restate them here.
+about) live in [`../SKILL.md`](../SKILL.md) §*Calibrate what the child may ask
+about* — treat that section as canonical; do not restate them here.
 
 ### Goal-driven children: watch the outcome, not the churn
 
@@ -106,12 +107,14 @@ Design consequences:
   question/pause. A reused session may emit the OLD goal's clear during new
   start: filter the exact new objective or keep repeated terminal events and
   reconcile identity. An unfiltered one-shot watcher can be consumed too early.
-  See orchestration `references/goals.md` for the concrete safe shape.
+  See orchestration
+  [`references/goals.md`](../../pi-web-ui-internal-api-orchestration/references/goals.md)
+  for the concrete safe shape.
 - **A start receipt is not completion.** Goal start dispatches detached; poll
   `GET /sessions/:id/goal` for the canonical status, or rely on the watch.
 - **Pause semantics are honest per runtime.** Claude has no native pause — the
   server disarms an auto-continue loop (bounded nudges, backoff); Command Code
-  pause arms a control file the goal-runner mod honours at its next stop; Pi
+  pause arms a control file the goal runner honours at its next stop; Pi
   pause works mid-run. If you abort a goal-driven child and do NOT pause, an
   armed goal may legitimately re-launch it.
 - **Budgets are real outcomes.** Claude auto-continue exhaust (20 nudges,
@@ -127,7 +130,7 @@ child. This is a **Pi coding agent function** — the `goal-engine` extension's
 (their pause is a server-side control).
 
 A goal-carrying Pi parent never idles on its own: every run end re-arms a
-continuation. The watch-wake extension now steers a busy host, but supervision
+continuation. The watch-wake tooling now steers a busy host, but supervision
 still needs a clean parked boundary so goal continuations do not race child
 handling or spend budget while waiting. Before dispatching and going idle:
 
@@ -149,11 +152,10 @@ handling or spend budget while waiting. Before dispatching and going idle:
 auto-resumes the goal and the starvation returns. Plain tool-pause never
 does.
 
-
 ## Related
 
-- `SKILL.md` — the condensed supervision rules: ask the operator about child
-  capability, wake on gates not progress, the three-state liveness table,
+- [`../SKILL.md`](../SKILL.md) — the condensed supervision rules: ask the operator
+  about child capability, wake on gates not progress, the three-state liveness table,
   platform-eval-first.
-- `pi-web-ui-internal-api-orchestration/references/goals.md` — the goal API and
-  per-runtime honesty matrix.
+- [`../../pi-web-ui-internal-api-orchestration/references/goals.md`](../../pi-web-ui-internal-api-orchestration/references/goals.md)
+  — the goal API and per-runtime honesty matrix.
