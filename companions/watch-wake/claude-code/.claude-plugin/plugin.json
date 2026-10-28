@@ -1,0 +1,5 @@
+{
+  "name": "watch-wake",
+  "version": "0.2.0",
+  "description": "Cross-session parent-wake for a bare Claude Code CLI: be woken (a new turn starts) when a Pi Web UI Internal API watch on a child session fires; plus a model-free wake_deadline backstop."
+}
