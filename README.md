@@ -87,7 +87,7 @@ A skill qualified for this repo only if it was:
 See [`packs/pi-web-ui-orchestration-pack/README.md`](./packs/pi-web-ui-orchestration-pack/README.md) for the full guide. Four skills for orchestrating child agents through [Pi Web UI](https://github.com/valtterimelkko/pi-web-ui)'s local Internal API:
 - `pi-web-ui-internal-api-orchestration` — the parent's loop: discover, create, dispatch, watch, verify and clean up child sessions
 - `long-horizon-waiting-strategies` — going idle safely and supervising children without polling
-- `orchestrated-child-worker` — the evidence-and-hand-back discipline every dispatched child follows
+- `agent-os-child` — the evidence-and-hand-back discipline every dispatched child follows (the name is historical: no Agent OS needed; [what to ignore](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/ORCHESTRATION-FIXTURE-SET.md#adopting-outside-the-authors-setup-what-to-ignore))
 - `secret-scanning` — scan repositories and artefacts for credentials before publishing
 
 The skills rely on a wake mechanism that is published separately as code, in [`companions/`](./companions/README.md):
@@ -158,7 +158,7 @@ skills/
   capture-dashboard/
   pi-web-ui-internal-api-orchestration/
   long-horizon-waiting-strategies/
-  orchestrated-child-worker/
+  agent-os-child/
   secret-scanning/
 packs/
   pi-web-ui-orchestration-pack/
@@ -193,7 +193,7 @@ Some skills are pure workflow/documentation skills. Others include scripts that 
 
 ### Requires local tool/runtime setup
 - `pi-extension` — Pi Coding Agent installation and docs/examples for your installed version
-- `pi-web-ui-internal-api-orchestration`, `long-horizon-waiting-strategies`, `orchestrated-child-worker` — a running Pi Web UI instance with its local Internal API socket/token; `pi-orch` optional but recommended (see the [pack README](./packs/pi-web-ui-orchestration-pack/README.md))
+- `pi-web-ui-internal-api-orchestration`, `long-horizon-waiting-strategies`, `agent-os-child` — a running Pi Web UI instance with its local Internal API socket/token; `pi-orch` optional but recommended (see the [pack README](./packs/pi-web-ui-orchestration-pack/README.md))
 - `claude-p`, `claude-channels` — Claude Code CLI installation and local auth state
 - `opencode-plugin` — OpenCode installation and plugin runtime
 - `agy-p` — Antigravity CLI installation and local auth state

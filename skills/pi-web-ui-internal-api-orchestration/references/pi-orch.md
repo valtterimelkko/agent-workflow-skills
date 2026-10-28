@@ -45,7 +45,7 @@ SID=$(pi-orch spawn --runtime pi --cwd <worktree> --model-selector <live-selecto
 - **Always pass `--goal-budget-tokens` for a child that may run long.** The server default is 5,000,000 tokens and pauses long goals mid-run; `pi-orch` prints a stderr note when you omit it. Measured programme lanes needed tens of millions (40–60 million) rather than the default. Validated 1..1,000,000,000.
 - **The objective must be a single line**: the goal API rejects newlines (and `pi-orch` refuses them first). Keep the long text in the brief file and point at it.
 - Goal flags without an objective, or an empty objective, are exit 2: they never create a plain child by accident.
-- A goal child no longer gets the completion template as a queued follow-up: **paste `pi-orch template --goal` into the brief file**. `--template-follow-up` opts back in (a pointer in the objective, the instructions queued); exit 22 only then, when it was not delivered. The goal template puts `Status: GOAL_ACHIEVED` on its own line immediately before the `pi-completion/v1` block (`orchestrated-child-worker` §2).
+- A goal child no longer gets the completion template as a queued follow-up: **paste `pi-orch template --goal` into the brief file**. `--template-follow-up` opts back in (a pointer in the objective, the instructions queued); exit 22 only then, when it was not delivered. The goal template puts `Status: GOAL_ACHIEVED` on its own line immediately before the `pi-completion/v1` block (`agent-os-child` §2).
 - Create-then-goal (`spawn` without goal flags, then `goal <sid> start …`) is the right order when you must register the watch before the goal starts.
 
 ## Retention ids, lineage and `status --owner`

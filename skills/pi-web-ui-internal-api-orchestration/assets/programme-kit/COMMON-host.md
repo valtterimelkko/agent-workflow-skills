@@ -1,6 +1,6 @@
 # <programme> — common rules, host children (binding for every lane)
 
-Parent: <harness> session <id>. You are an orchestrated child: load and follow the `orchestrated-child-worker` skill (hand-back protocol, commit discipline, host traps, completion block). This file adds only what is specific to this programme.
+Parent: <harness> session <id>. You are an orchestrated child: load and follow the `agent-os-child` skill (hand-back protocol, commit discipline, host traps, completion block). This file adds only what is specific to this programme.
 
 ## Read first, in your worktree
 `AGENTS.md` (follow it) · <plan of record: path and section> · <frozen contract, if any: path>.

@@ -41,14 +41,14 @@ credentials out of everything you publish.
 |---|---|
 | [`pi-web-ui-internal-api-orchestration`](../../skills/pi-web-ui-internal-api-orchestration/SKILL.md) | **The parent's loop.** Discovery (`/capabilities`, `/capacity`, `/models`), session creation and retention, dispatch modes, goals, watch-wake, evidence, adoption, cleanup, and the child directive every dispatch must carry. This is the main skill; start here. |
 | [`long-horizon-waiting-strategies`](../../skills/long-horizon-waiting-strategies/SKILL.md) | **Going idle safely.** The pre-idle checklist, wake mechanisms per harness, model-free backstops, the liveness discriminator, and how to supervise a child without over-watching. Read it before your first long wait. |
-| [`orchestrated-child-worker`](../../skills/orchestrated-child-worker/SKILL.md) | **The child's discipline.** Every dispatched child is told to load this: owned paths, strict TDD, clean commits, command receipts with exit statuses, the hand-back protocol, reviewer rules, and never self-sign-off. |
+| [`agent-os-child`](../../skills/agent-os-child/SKILL.md) | **The child's discipline.** Every dispatched child is told to load this: owned paths, strict TDD, clean commits, command receipts with exit statuses, the hand-back protocol, reviewer rules, and never self-sign-off. |
 | [`secret-scanning`](../../skills/secret-scanning/SKILL.md) | **Before publishing.** Scan repositories and artefacts for credentials with gitleaks, redact findings, and keep credentials outside the repo tree. |
 
 ### How they fit together
 
 - The **parent** loads `pi-web-ui-internal-api-orchestration` for the loop and
   `long-horizon-waiting-strategies` before any idle window.
-- Every dispatch prompt **mandates `orchestrated-child-worker`** — no harness
+- Every dispatch prompt **mandates `agent-os-child`** — no harness
   injects it automatically, so a brief that omits it produces drift.
 - When the work produces repos, evidence bundles or published artefacts,
   **`secret-scanning`** is the check before anything leaves the machine.
@@ -64,7 +64,7 @@ The skills are plain folders containing a `SKILL.md` (some have
 git clone https://github.com/valtterimelkko/agent-workflow-skills
 cp -r agent-workflow-skills/skills/pi-web-ui-internal-api-orchestration <your-skills-dir>/
 cp -r agent-workflow-skills/skills/long-horizon-waiting-strategies      <your-skills-dir>/
-cp -r agent-workflow-skills/skills/orchestrated-child-worker            <your-skills-dir>/
+cp -r agent-workflow-skills/skills/agent-os-child            <your-skills-dir>/
 cp -r agent-workflow-skills/skills/secret-scanning                      <your-skills-dir>/
 ```
 
@@ -121,7 +121,10 @@ public use:
 - `pi-web-ui-internal-api-orchestration` and `long-horizon-waiting-strategies`
   keep their canonical names; host-specific routing, subscriptions, private
   repositories and incident details have been removed or generalised.
-- `orchestrated-child-worker` is the public form of the author's private
-  child-worker skill, with the coordination-layer mechanics removed.
+- `agent-os-child` keeps the name of the author's private skill (so `pi-orch`
+  and the Pi Web UI docs refer to one name everywhere), with the
+  coordination-layer mechanics removed. "Agent OS" is the author's private
+  layer and is not needed; its directive wording about a "board" can be
+  ignored. See the [what-to-ignore table](https://github.com/valtterimelkko/pi-web-ui/blob/master/docs/ORCHESTRATION-FIXTURE-SET.md#adopting-outside-the-authors-setup-what-to-ignore).
 - `secret-scanning` is the canonical secret-scanning skill, with host paths
   generalised.

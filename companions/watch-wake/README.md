@@ -315,4 +315,4 @@ real Pi installation.
 - the watch-wake companion — this folder, [`README.md`](README.md)
 - skills — [`skills/pi-web-ui-internal-api-orchestration/`](../../skills/pi-web-ui-internal-api-orchestration/SKILL.md),
   [`skills/long-horizon-waiting-strategies/`](../../skills/long-horizon-waiting-strategies/SKILL.md),
-  [`skills/orchestrated-child-worker/`](../../skills/orchestrated-child-worker/SKILL.md)
+  [`skills/agent-os-child/`](../../skills/agent-os-child/SKILL.md)

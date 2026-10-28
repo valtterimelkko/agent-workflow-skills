@@ -1,6 +1,6 @@
 ---
 name: pi-web-ui-internal-api-orchestration
-description: "Drive real agent work through Pi Web UI's local Internal API from any directory, harness or voice assistant on the same host. Use to run a task on several models and compare, spin up child or sub-agent sessions, split work across runtimes, batch-score items, be woken when a child finishes, answer a child's question, or monitor and clean up sessions. Tell every child to follow `orchestrated-child-worker`; waiting: `long-horizon-waiting-strategies`. To prove a change to Pi Web UI itself works, use the repository's live-validation documentation."
+description: "Drive real agent work through Pi Web UI's local Internal API from any directory, harness or voice assistant on the same host. Use to run a task on several models and compare, spin up child or sub-agent sessions, split work across runtimes, batch-score items, be woken when a child finishes, answer a child's question, or monitor and clean up sessions. Tell every child to follow `agent-os-child`; waiting: `long-horizon-waiting-strategies`. To prove a change to Pi Web UI itself works, use the repository's live-validation documentation."
 ---
 
 # Pi Web UI Internal API Orchestration
@@ -45,7 +45,7 @@ This file holds the workflow and the rules that keep you out of trouble.
 **Tier 1 — the only must-read: `references/parent-card.md`** (one page: the rules that
 bit, copy-paste sequences per harness, on-wake triage, routing). Read it before you
 dispatch anything and again after every compaction. Also read `references/routing.md`
-before choosing a model, and mandate the `orchestrated-child-worker` skill in every
+before choosing a model, and mandate the `agent-os-child` skill in every
 child prompt (§3; you do not follow it, you mandate it). Everything else is reference:
 open a file only when the card or a numbered step points there.
 
@@ -479,16 +479,18 @@ GET  /runs/:runId
 Large or slow fan-outs should prefer detached individual prompts, because
 `batch/prompt` holds answer bodies until its response completes.
 
-**Mandatory child skill requirement.** The `orchestrated-child-worker` skill is **not injected
+**Mandatory child skill requirement.** The `agent-os-child` skill is **not injected
 into API-created sessions by any harness; only your prompt delivers it. Every child prompt,
 for implementers, researchers and reviewers alike, must carry this directive. Without it a
 worker drifts into narrative, omits command exit statuses, ignores exclusions and
 self-signs-off:
 
-> "You are dispatched as an orchestrated child worker. You MUST load and strictly follow the `orchestrated-child-worker` skill. Your session ID is `<sessionId>`. Your parent session ID is `<parentSessionId>`. Work strictly inside execution worktree `<cwd>`. Owned paths: `<paths>`. Negative exclusions: `<paths>`. Hand-back directory: `<dir>`. Success criteria are frozen. Announce your task once before editing files (a one-line note in the hand-back directory), and leave a closing note when you finish. <Push / do not push.> Hand back by ending your turn only when your own commands have finished; never wait or poll."
+> "You are dispatched as an Agent OS child worker. You MUST load and strictly follow the `agent-os-child` skill. Your session ID is `<sessionId>`. Your parent session ID is `<parentSessionId>`. Work strictly inside execution worktree `<cwd>`. Owned paths: `<paths>`. Negative exclusions: `<paths>`. Hand-back directory: `<dir>`. Success criteria are frozen. Announce your task once before editing files (a one-line note in the hand-back directory), and leave a closing note when you finish. <Push / do not push.> Hand back by ending your turn only when your own commands have finished; never wait or poll."
+
+The directive `pi-orch lane run` sends adds "declare presence on the board" clauses for the author's coordination layer. If you have no such layer, drop those clauses or leave them in: the child skill tells a child without a board to write the note file instead.
 
 Put the directive **in the prompt itself**, not only in a brief file it points to, and restate
-it inside a goal objective ("follow `orchestrated-child-worker`; mark the goal achieved and end") —
+it inside a goal objective ("follow `agent-os-child`; mark the goal achieved and end") —
 goal-engine dispatches that dropped it produced most of the unmandated children in an
 audit of real child sessions. The rest of a good brief (each item traces to a
 recurring failure in that audit):
@@ -526,7 +528,7 @@ recurring failure in that audit):
   disposable servers started with the inherited production placement or tool-root
   variables removed (`env -u <VAR> …`); heavy commands in a `systemd-run --scope` with a
   hard `MemoryMax`; changed-file lint against the lane base; never touch the main
-  checkout. The child-side form is `orchestrated-child-worker` §3 and §7.
+  checkout. The child-side form is `agent-os-child` §3 and §7.
 - Templates for all of this: `references/programme-kit.md`.
 
 For a read-only reviewer, replace the owned-paths, exclusions and push sentences with "You are a read-only reviewer: do not edit, commit, stash or push, and leave the tree untouched; numbered answer and correction files amend the brief", and add the verdict format (§3c), to be returned in the review file and the final message. Your own prompt already carries the identity and scope context, so the brief need not restate it.
@@ -599,7 +601,7 @@ The rules worth carrying in your head:
   carries the exit code and output tail — no child session, no watch, no tokens while
   waiting. That is **for you, the parent**: a *child* that ends its turn on its own
   background job wakes you with a false hand-back, which is why children run long
-  commands in the foreground (`orchestrated-child-worker` §2). Reserve child dispatch and watch-wake for work that
+  commands in the foreground (`agent-os-child` §2). Reserve child dispatch and watch-wake for work that
   needs another model context; cross-runtime waiting rules are unchanged.
 - **Bare-CLI parent ⇒ local delivery is mandatory** (table above), then one
   appropriate backstop per `long-horizon-waiting-strategies` **before** idling:
@@ -793,7 +795,7 @@ ownership/fencing, post-adoption wiring, worked example. **Read it before your f
 
 ## 10. Orchestrator governance
 
-For the parent only (children follow `orchestrated-child-worker`). The full playbook, with the
+For the parent only (children follow `agent-os-child`). The full playbook, with the
 decision boundaries, restart protocol and notification standards, is
 **`references/orchestrator-governance.md`**; the rules to carry:
 
@@ -821,7 +823,7 @@ decision boundaries, restart protocol and notification standards, is
     (`references/orchestrator-governance.md` §3).
 - **On every wake, check every child**, not only the one named in the wake.
 - **Flatten child chains**: adopt or re-parent finished sub-workers under your own record.
-- **Mandate `orchestrated-child-worker`** in every dispatch (§3) and require child-side
+- **Mandate `agent-os-child`** in every dispatch (§3) and require child-side
   task announcement with owned paths.
 - **Verify every fix a child claims against the diff**, not its report. Children have
   claimed fixes they never made and root causes that were wrong; a correction brief should
@@ -857,7 +859,7 @@ decision boundaries, restart protocol and notification standards, is
 - **`long-horizon-waiting-strategies`** — going idle safely during long waits:
   the pre-idle checklist, harness-specific wake and backstop mechanics (Pi, Claude
   Code, Antigravity, Command Code), and the supervision and liveness rules.
-- **`orchestrated-child-worker`** — the skill every child must follow; you mandate it (§3).
+- **`agent-os-child`** — the skill every child must follow; you mandate it (§3).
 - **`secret-scanning`** — the credential-scanning companion for work that produces
   artefacts, evidence bundles or repositories.
 - In the Pi Web UI repo when present: `docs/INTERNAL-API-QUICKSTART.md`,
@@ -879,6 +881,6 @@ If the repo is not checked out, this skill plus live `/capabilities` is enough.
 - **The watch-wake companion** — `companions/watch-wake/` in this repository: the Pi
   extension and the Claude Code mod that wake an idle parent, plus the model-free
   wake deadlines.
-- Sibling skills in this repository: [`../orchestrated-child-worker/`](../orchestrated-child-worker/),
+- Sibling skills in this repository: [`../agent-os-child/`](../agent-os-child/),
   [`../long-horizon-waiting-strategies/`](../long-horizon-waiting-strategies/),
   [`../secret-scanning/`](../secret-scanning/).

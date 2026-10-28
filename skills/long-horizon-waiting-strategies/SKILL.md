@@ -29,7 +29,7 @@ is reference, read when the card points here or the situation matches:
 | [`references/claude-code-watch-wake-and-background-watcher.md`](references/claude-code-watch-wake-and-background-watcher.md) | you are a Claude Code parent, before the first long wait |
 | [`references/antigravity-reactive-watcher-and-schedule.md`](references/antigravity-reactive-watcher-and-schedule.md) | you are an Antigravity parent, before the first long wait |
 
-Every dispatch still mandates `orchestrated-child-worker` (*The child contract*).
+Every dispatch still mandates `agent-os-child` (*The child contract*).
 
 ## The problem this solves
 
@@ -134,17 +134,17 @@ you are not going to wake up.
 > works once actually called; the failure was never asking "what delivers my
 > wake?".
 
-## The child contract — every dispatch mandates `orchestrated-child-worker`
+## The child contract — every dispatch mandates `agent-os-child`
 
 Your wake depends on the child ending its turn: a child that polls, sleeps or waits
 for your reply holds the turn open, and the watch that would wake you never trips.
-The [`orchestrated-child-worker`](../orchestrated-child-worker/SKILL.md) skill is
+The [`agent-os-child`](../agent-os-child/SKILL.md) skill is
 where the child learns to hand back by ending its turn, to commit cleanly, to report
 commands with exit statuses, and never to self-sign-off.
 
 - **It is not injected for you.** Sessions created through the Internal API do not
   load this skill for the child. **Every dispatch brief must tell the child to load
-  and follow `orchestrated-child-worker`**, also for a reviewer (its section on
+  and follow `agent-os-child`**, also for a reviewer (its section on
   reviewers), a follow-up prompt to a fresh session, and a child you adopted.
 - The brief also carries the child's own session id, the coordination directory
   outside the work tree, and the ordered hand-back files with the completion marker
@@ -499,7 +499,7 @@ Two more discriminations the table implies:
 - **A child waiting on its own background task looks like a silent end.** A Pi child
   that launched a background job and ended its turn to await that job's completion wake is
   on a legitimate path, not handing back. Check for its running background job before
-  treating the end as a hand-back or a stall. `orchestrated-child-worker` now tells children not to
+  treating the end as a hand-back or a stall. `agent-os-child` now tells children not to
   do this, and to start any early stop with `NOT FINISHED:`; treat such a message as
   progress, not a hand-back. (In audited sessions this was common.)
 - **Pre-commit the stall response before you idle.** Write into your checkpoint what you
@@ -566,7 +566,7 @@ including one for a correction round, a paused `goal_state` condition as well as
 too.
 
 **Mandate the child skill** (*the child contract*, above): the brief tells the
-child to follow `orchestrated-child-worker`, which makes it work in its isolated
+child to follow `agent-os-child`, which makes it work in its isolated
 worktree, announce its task and owned paths in the coordination directory, leave a
 closing note, and end its turn to hand back.
 
@@ -649,7 +649,7 @@ failure shapes are in
   — owns the Internal API side: watch/onFire mechanics, fan-in, retention, evidence.
   Read it before your first detached dispatch; use this skill for the idle-safety
   discipline on top.
-- **[`orchestrated-child-worker`](../orchestrated-child-worker/SKILL.md)** — the skill
+- **[`agent-os-child`](../agent-os-child/SKILL.md)** — the skill
   every dispatched child is told to follow.
 - **[`secret-scanning`](../secret-scanning/SKILL.md)** — scan artefacts and repositories
   for credentials before publishing them.

@@ -22,7 +22,7 @@ Antigravity cannot run in-process background event loops (like Pi extensions). H
 
 ### What the host already gives an Antigravity parent
 
-Hooks configured in `~/.gemini/config/hooks.json` (`PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop`) and any MCP server you have attached are available automatically, so a parent can read a child's or a past session's state without parsing raw transcripts. They are synchronous and cannot start a turn, so no wake mechanism exists beyond the two primitives above. **Children you dispatch still need the `orchestrated-child-worker` directive in their prompt** (SKILL.md §3).
+Hooks configured in `~/.gemini/config/hooks.json` (`PreInvocation`, `PreToolUse`, `PostToolUse`, `Stop`) and any MCP server you have attached are available automatically, so a parent can read a child's or a past session's state without parsing raw transcripts. They are synchronous and cannot start a turn, so no wake mechanism exists beyond the two primitives above. **Children you dispatch still need the `agent-os-child` directive in their prompt** (SKILL.md §3).
 
 ---
 

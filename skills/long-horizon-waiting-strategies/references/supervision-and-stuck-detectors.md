@@ -45,7 +45,7 @@ state only. So **convert the child's questions into observable state by
 instructing it to** in the dispatch brief. This is a protocol you impose, not a
 capability you go looking for, and it works on any repo, runtime or route:
 
-- **Put it in the brief by mandating `orchestrated-child-worker`.** That skill is not
+- **Put it in the brief by mandating `agent-os-child`.** That skill is not
   injected into Internal API children; it carries the end-the-turn-to-hand-back rule,
   commit and exit-status discipline and the reviewer role. Name it in every dispatch.
 

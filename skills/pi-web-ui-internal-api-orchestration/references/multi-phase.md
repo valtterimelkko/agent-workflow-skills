@@ -164,11 +164,11 @@ success, a confinement hole, and eviction orphaning running children.
 
 **Create and dispatch:**
 - `POST /sessions` `{runtime:<the route's runtime>, model:<exact selector>, thinkingLevel:<highest advertised, e.g. "max">, cwd:<the implementer's worktree>, retention:{mode:"durable", ttlSeconds:<window+headroom>, ownerId:"orch-<prog>-<parentShort8>-<lane>-reviewer"}}`; verify `fallbackApplied:false` and the effective model (`sessions.md`).
-- The prompt carries the `orchestrated-child-worker` directive (SKILL.md §3), the role line "you are a read-only reviewer", and the verdict format. Dispatch detached (`verbosity:"answers"`, `detach:true`, an `idempotencyKey`) and save the request and receipt.
+- The prompt carries the `agent-os-child` directive (SKILL.md §3), the role line "you are a read-only reviewer", and the verdict format. Dispatch detached (`verbosity:"answers"`, `detach:true`, an `idempotencyKey`) and save the request and receipt.
 - Keep a reusable **reviewer brief file** and a short per-lane prompt (lane, worktree, branch, diff range, focus areas). Tell the reviewer that numbered `NN-answer.md` / `NN-correction.md` files amend the frozen brief, or it judges against stale criteria. Inputs the reviewer reads: the frozen lane brief plus numbered amendments, `complete.md` and the evidence bundle, the plan section, and `git diff <base>...HEAD`.
 - Ask for the deliverable as a **file** (`reviews/<lane>-review.md`) and end the turn. Read-only is enforced by the brief alone, so check `git status` is clean afterwards.
 
-**The brief asks for five checks:** (1) correctness: read the diff, not the report; (2) claims against evidence, marking anything not re-checked UNVERIFIED; (3) test quality (a real RED, no mocks hiding the behaviour); (4) scope and safety (owned paths, secrets, production side effects); (5) fitness for the purpose. Verdict format (also in `orchestrated-child-worker` §8):
+**The brief asks for five checks:** (1) correctness: read the diff, not the report; (2) claims against evidence, marking anything not re-checked UNVERIFIED; (3) test quality (a real RED, no mocks hiding the behaviour); (4) scope and safety (owned paths, secrets, production side effects); (5) fitness for the purpose. Verdict format (also in `agent-os-child` §8):
 
 ```text
 VERDICT: ACCEPT | ACCEPT WITH FIXES | REJECT

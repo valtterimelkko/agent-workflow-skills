@@ -41,7 +41,7 @@ Common: `pi-orch` on `PATH`; retention id `orch-<programme>-<parentShort8>-<lane
 1. Spawn: `pi-orch spawn --runtime pi --cwd <worktree> --model-selector <SEL> --thinking <lvl> --owner <id> --ttl <s> --id-only`. The brief file carries the completion template (`pi-orch template [--goal]`, pasted).
 2. Watch: `mcp__watch-wake__watch_wake_register` with `session_id`, the canonical block as `conditions`, a `message`, `max_wakes`.
 3. Backstop: `mcp__watch-wake__wake_deadline` `action=arm` (window plus headroom).
-4. Dispatch: `pi-orch prompt <sid> --message "…" --id-only`. The message starts with the child directive: *"You are dispatched as an orchestrated child worker. You MUST load and strictly follow the `orchestrated-child-worker` skill. Your session ID is `<sid>`. Your parent session ID is `<yours>`. Work strictly inside `<worktree>`. Owned paths: … Negative exclusions: … Hand-back directory: … Success criteria are frozen. Announce your task once, leave a closing note on completion. Do not push. Hand back by ending your turn only when your own commands have finished; never wait or poll."* (reviewer variant: `SKILL.md` §3c).
+4. Dispatch: `pi-orch prompt <sid> --message "…" --id-only`. The message starts with the child directive: *"You are dispatched as an Agent OS child worker. You MUST load and strictly follow the `agent-os-child` skill. Your session ID is `<sid>`. Your parent session ID is `<yours>`. Work strictly inside `<worktree>`. Owned paths: … Negative exclusions: … Hand-back directory: … Success criteria are frozen. Announce your task once, leave a closing note on completion. Do not push. Hand back by ending your turn only when your own commands have finished; never wait or poll."* (reviewer variant: `SKILL.md` §3c).
 5. Idle: write the STATE RESUME block with the ids, then end the turn with no further tool calls.
 6. On wake: section 3. Cancel the deadline by its exact id.
 7. Verify: `pi-orch verify <sid> --gates-file <brief>`, then your own commands.
@@ -99,4 +99,4 @@ Managed Claude parent: use server `onFire` plus a `deadline` condition instead (
 - `multi-phase.md` and `programme-kit.md`: programmes; copy files from `assets/programme-kit/`.
 - `patterns.md`: fan-out and operator report.
 - `long-horizon-waiting-strategies` skill: backstop choice, supervision, stuck detectors.
-- `orchestrated-child-worker` skill: you mandate it in every child prompt; you do not follow it.
+- `agent-os-child` skill: you mandate it in every child prompt; you do not follow it.

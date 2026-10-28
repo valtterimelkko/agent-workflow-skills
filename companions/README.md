@@ -106,4 +106,4 @@ directly and rely on Node's built-in type stripping.
 - the pack — https://github.com/valtterimelkko/agent-workflow-skills/blob/main/packs/pi-web-ui-orchestration-pack/README.md
 - skills — [`skills/pi-web-ui-internal-api-orchestration/`](../skills/pi-web-ui-internal-api-orchestration/SKILL.md),
   [`skills/long-horizon-waiting-strategies/`](../skills/long-horizon-waiting-strategies/SKILL.md),
-  [`skills/orchestrated-child-worker/`](../skills/orchestrated-child-worker/SKILL.md)
+  [`skills/agent-os-child/`](../skills/agent-os-child/SKILL.md)

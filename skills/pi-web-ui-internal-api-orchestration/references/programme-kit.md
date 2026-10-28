@@ -36,7 +36,7 @@ Copy them from `assets/programme-kit/` (`README.md` there has the commands):
 | File | Use |
 |---|---|
 | `STATE.md` | live checkpoint, ≤ 60 lines: one RESUME HERE block, lane table, backstop row, operator-authority log |
-| `COMMON-host.md`, `COMMON-cloud.md` | programme-wide rules; the hand-back protocol and host traps stay in `orchestrated-child-worker` |
+| `COMMON-host.md`, `COMMON-cloud.md` | programme-wide rules; the hand-back protocol and host traps stay in `agent-os-child` |
 | `lane-brief.md` | objective, owned paths, frozen criteria, **one** hand-back marker, stop caps, a final `GATES:` block |
 | `review-brief.md` | reviewer verdict format, proportionality line, time-box |
 | `correction-brief.md` | one defect block per finding, red-first fix, re-run gates |
@@ -50,7 +50,7 @@ Rules that keep `STATE.md` honest:
 - Keep counters honest: reviews performed vs lanes accepted vs objectives not achieved.
 - Rewrite the RESUME block on every wake and move old wake-log lines to a history file, so the file never grows past one screen.
 
-The dispatch prompt stays short: the `orchestrated-child-worker` directive (SKILL.md §3), the session id,
+The dispatch prompt stays short: the `agent-os-child` directive (SKILL.md §3), the session id,
 the worktree, and "read `<ops dir>/COMMON.md`, then `<lane>/brief.md`". A goal objective is one
 line with an explicit token budget (`--goal-budget-tokens`, tens of millions for long lanes). Keep
 permission stories out of text sent to children (`orchestrator-governance.md` §7). Numbering is
