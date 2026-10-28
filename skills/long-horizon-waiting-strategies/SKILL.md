@@ -1,6 +1,6 @@
 ---
 name: long-horizon-waiting-strategies
-description: "Strategies for surviving long waits and supervising dispatched child agents without over-watching: go idle safely with verified recovery, and build liveness-correct stuck-detectors — server-side watch-wake, bare-CLI watch extensions, model-free wake deadlines and independent process backstops, hand-back protocol (children are told to follow `orchestrated-child-worker`), liveness discriminator. Make sure to use this skill whenever waiting > few minutes — long-running child sessions, Internal API orchestration, builds/migrations/batch jobs/measurement windows, 'check back later' — or before polling, sleeping in-turn, holding a turn open, or re-checking child progress. Also for supervision design, child authority, heartbeats/stuck-detectors, child question protocol, wake not firing, dead-man/watchdog, going idle, micromanaging, or agent idle for hours. Covers Pi, Claude Code, Antigravity and Command Code mechanisms; supervision is harness-agnostic."
+description: "Surviving long waits and supervising dispatched child agents without over-watching: go idle safely with verified recovery, and build liveness-correct stuck-detectors — watch-wake, model-free wake deadlines, background-shell completion and independent process backstops, the backstop ladder, the hand-back protocol, the liveness discriminator. Use whenever waiting more than a few minutes (child sessions, Internal API orchestration, builds, migrations, batch jobs, measurement windows, 'check back later') or before polling, sleeping in-turn, holding a turn open or re-checking child progress. Also for supervision design, child authority, heartbeats and stuck-detectors, the child question protocol, a wake that did not fire, dead-man switches, watchdogs, going idle, micromanaging children, or an agent idle for hours. Covers Pi, Claude Code, Antigravity and Command Code mechanisms; the supervision rules are harness-agnostic."
 ---
 
 # Long-horizon waiting strategies
@@ -8,31 +8,28 @@ description: "Strategies for surviving long waits and supervising dispatched chi
 How to wait for hours without burning context, holding a turn open, or — the
 failure that actually bites — **never waking up again**.
 
-## What to read, in three tiers
+## When to use
 
-**Tier 1 — Must read, every run that will idle.** These named sections, in
-order, before you end any turn on a wait: *Harness applicability* (which wake
-path applies to you), *The pre-idle checklist*, *The child contract* (every
-dispatch mandates `orchestrated-child-worker`), *Choose the backstop for the failure you
-are covering* and *The backstop ladder*.
+Also: supervision design, child authority, heartbeats and stuck-detectors, the child
+question protocol, dead-man switches and watchdogs, an agent idle for hours,
+micromanaging children, and measurement windows.
 
-**Tier 2 — Must read when the situation matches.** Conditional references —
-mandatory within their situation, skippable outside it:
+## What to read
 
-| Reference | Mandatory when… |
+**Tier 1 — the only must-read for an Internal API parent:**
+[`../pi-web-ui-internal-api-orchestration/references/parent-card.md`](../pi-web-ui-internal-api-orchestration/references/parent-card.md)
+(rules, per-harness wait sequences, canonical watch blocks, on-wake triage). Read it
+before you end any turn on a wait, and again after every compaction. Everything below
+is reference, read when the card points here or the situation matches:
+
+| Reference | Open it when… |
 |---|---|
-| `references/supervision-and-stuck-detectors.md` | you will dispatch or supervise a child, or build any stuck-detector — read **before** the dispatch, not after |
-| `references/claude-code-watch-wake-and-background-watcher.md` | you are a Claude Code CLI parent — before that harness's first long wait |
-| `references/antigravity-reactive-watcher-and-schedule.md` | you are an Antigravity CLI/IDE parent — before that harness's first long wait (covers `wait-watch.sh` and orchestrator invariants) |
+| *Harness applicability*, *The pre-idle checklist*, *Choose the backstop*, *The backstop ladder* (this file) | you wait on anything other than an Internal API child, or the card's backstop does not fit |
+| [`references/supervision-and-stuck-detectors.md`](references/supervision-and-stuck-detectors.md), *Supervising a dispatched child* (this file) | you dispatch or supervise an agent child, or build a stuck-detector (before the dispatch) |
+| [`references/claude-code-watch-wake-and-background-watcher.md`](references/claude-code-watch-wake-and-background-watcher.md) | you are a Claude Code parent, before the first long wait |
+| [`references/antigravity-reactive-watcher-and-schedule.md`](references/antigravity-reactive-watcher-and-schedule.md) | you are an Antigravity parent, before the first long wait |
 
-**Tier 3 — Situational.** *Supervising a dispatched child* (near the end:
-operator-confirmed capability, over-supervision, the liveness discriminator,
-the hand-back protocol, goal cases) is required reading before you dispatch an
-agent child and skippable when you are waiting on a build, a measurement
-window, or a batch job with no child agent.
-
-Skipping a Tier 1 or Tier 2 item is how idle windows end with nobody waking
-up.
+Every dispatch still mandates `orchestrated-child-worker` (*The child contract*).
 
 ## The problem this solves
 
@@ -59,47 +56,53 @@ Every harness has a proven wake path. The names differ; the contract does not:
 reconcile on wake.** Read the matching reference **before that harness's first
 long wait**.
 
-- **Pi** (Pi Coding Agent CLI or a Pi SDK host with watch-wake and background-task
-  extensions): `watch_wake_register`, `wake_deadline` and background shell tools are
-  covered below. Background task completion is a follow-up message that triggers a
-  turn; that delivery *is* the wake.
-- **Claude Code**: server-side `onFire` cannot reach a bare `claude` CLI, but a
-  host-wide `watch-wake` mod can: `watch_wake_register` on the child plus
+- **Pi** (Pi Coding Agent CLI or a Pi SDK host): the watch-wake companion
+  ([`../../companions/watch-wake/`](../../companions/watch-wake/)) provides
+  `watch_wake_register`, `wake_deadline`, `watch_wake_list` and `watch_wake_cancel`.
+  For command-shaped waits use **a background-shell tool if your harness has one,
+  otherwise the harness's background execution (for Claude Code `run_in_background`
+  Bash)**; a background task's completion arrives as a follow-up message that triggers
+  a turn, and that delivery *is* the wake. A background `subagent` launch behaves the
+  same way where your harness has one.
+- **Claude Code**: server-side `onFire` cannot reach a bare `claude` CLI, but the
+  watch-wake companion's host-wide mod can: `watch_wake_register` on the child plus
   `wake_deadline` as the model-free backstop, then end the turn; the wake starts a
-  new turn in the idle session. Where the mod tools are absent
-  (`--bare`, `--safe-mode`), a capped background Bash task that *exits* is the wake. A
-  managed Claude session uses server `onFire` targeting `$PI_WEB_UI_SESSION_ID`, with a
+  new turn in the idle session. Where the mod tools are absent (`--bare`,
+  `--safe-mode`), a capped background Bash task that *exits* is the wake. A managed
+  Claude session uses server `onFire` targeting `$PI_WEB_UI_SESSION_ID`, with a
   `deadline` condition as backstop. `claude -p` cannot wait (the mod refuses it): hand
   back instead. Differences from Pi: no harness background-shell tool (use
-  `run_in_background` Bash for command-shaped waits), no goal engine or memory mod, and
-  no subagent dead-man (none is needed).
-  → `references/claude-code-watch-wake-and-background-watcher.md`
+  `run_in_background` Bash for command-shaped waits), no goal engine, and no subagent
+  dead-man (none is needed).
+  → [`references/claude-code-watch-wake-and-background-watcher.md`](references/claude-code-watch-wake-and-background-watcher.md)
 - **Antigravity**: as a **child** it is a first-class watch subject and, unlike a bare
   Claude CLI, a managed antigravity session is a valid `onFire` **target** (the server
   can prompt it, queue-while-busy since contract 1.37.0), so a supervised antigravity
   child wakes its managed parent without extra tooling. As a **parent** in the bare
-  `agy` CLI or IDE, server-side `onFire` cannot reach the process and hooks are
-  synchronous lifecycle interceptors, not turn injectors. Use the reactive background
-  task (`run_command` with low `WaitMsBeforeAsync`; process exit delivers a
-  high-priority wake) paired with the native model-free task-scheduling tool
+  `agy` CLI or IDE, server-side `onFire` cannot reach the process and hooks
+  (`hooks.json`: `PreToolUse`, `PostToolUse`, `PreInvocation`, `PostInvocation`,
+  `Stop`) are synchronous lifecycle interceptors, not turn injectors. Use the reactive
+  background task (`run_command` with low `WaitMsBeforeAsync`; process exit delivers a
+  high-priority wake) paired with the native model-free `schedule` tool
   (`TimerCondition: <taskId>`, auto-cancels on completion). Obey zero-token waiting: do
-  not poll the task manager in a loop; end the turn immediately and let the reactive
+  not poll `manage_task` in a loop; end the turn immediately and let the reactive
   system message wake you.
-  → `references/antigravity-reactive-watcher-and-schedule.md`
-- **Command Code**: its watch-wake mod parks the run in the built-in `sleep` tool and
-  wakes via queued follow-up; it cannot start a fully idle run, so park, don't exit.
+  → [`references/antigravity-reactive-watcher-and-schedule.md`](references/antigravity-reactive-watcher-and-schedule.md)
+- **Command Code**: the watch-wake companion's Command Code mod parks the run in the
+  built-in `sleep` tool and wakes via a queued follow-up; it cannot start a fully idle
+  run, so park, don't exit.
 
 ## The pre-idle checklist — run it before EVERY idle window
 
 > **Harness scope.** The *questions* below are harness-agnostic; the tool names
-> in the answers differ. **Pi** (CLI or SDK host with watch-wake): `watch_wake_register`,
-> `wake_deadline`, a background shell. **Claude Code**: the `watch-wake` mod, with the same
-> `watch_wake_register` + `wake_deadline` contract (fallback: an exiting background
-> watcher); a managed Claude session uses server `onFire` plus the server `deadline`
-> condition. **Antigravity**: the exiting background task (`wait-watch.sh` via
-> `run_command`, low `WaitMsBeforeAsync`) plus the native scheduling tool. **Command
-> Code**: its watch-wake mod. See *Harness applicability* above before importing any
-> named tool.
+> in the answers differ. **Pi**: `watch_wake_register`, `wake_deadline`, a
+> background-shell tool if your harness has one. **Claude Code**: the watch-wake
+> mod, with the same `watch_wake_register` + `wake_deadline` contract (fallback: an
+> exiting background watcher); a managed Claude session uses server `onFire` plus the
+> server `deadline` condition. **Antigravity**: the exiting background task
+> (`wait-watch.sh` via `run_command`, low `WaitMsBeforeAsync`) plus the native
+> `schedule` tool. **Command Code**: its watch-wake mod. See *Harness applicability*
+> above before importing any named tool.
 
 Before you end your turn on any wait, answer all four out loud. If you cannot,
 you are not going to wake up.
@@ -126,7 +129,7 @@ you are not going to wake up.
 > starts in your session) are separable. The watch ledger can be perfectly
 > healthy while your session sits silent forever. The observed failure shape:
 > a parent audits its own server-side watch (status active, correct conditions)
-> and reports it will auto-resume — but as a bare CLI parent it has no
+> and reports it will auto-resume — but as a bare pi CLI parent it has no
 > delivery path, and it stays idle until a human intervenes. The wake extension
 > works once actually called; the failure was never asking "what delivers my
 > wake?".
@@ -135,25 +138,25 @@ you are not going to wake up.
 
 Your wake depends on the child ending its turn: a child that polls, sleeps or waits
 for your reply holds the turn open, and the watch that would wake you never trips.
-The `orchestrated-child-worker` skill is where the child learns to hand back by ending its
-turn, to commit cleanly, to report commands with exit statuses, and never to
-self-sign-off.
+The [`orchestrated-child-worker`](../orchestrated-child-worker/SKILL.md) skill is
+where the child learns to hand back by ending its turn, to commit cleanly, to report
+commands with exit statuses, and never to self-sign-off.
 
-- **It is not injected for you.** Sessions created through the Internal API get the
-  identity packet and scope warnings from the harness, not this
-  skill. **Every dispatch brief must tell the child to load and follow
-  `orchestrated-child-worker`**, also for a reviewer (its section on reviewers), a follow-up
-  prompt to a fresh session, and a child you adopted.
-- The brief also carries the child's own session id, the
-  coordination directory outside the work tree, and the ordered hand-back files with
-  the completion marker last (hand-back protocol below).
+- **It is not injected for you.** Sessions created through the Internal API do not
+  load this skill for the child. **Every dispatch brief must tell the child to load
+  and follow `orchestrated-child-worker`**, also for a reviewer (its section on
+  reviewers), a follow-up prompt to a fresh session, and a child you adopted.
+- The brief also carries the child's own session id, the coordination directory
+  outside the work tree, and the ordered hand-back files with the completion marker
+  last (hand-back protocol below).
 - Wording, the reviewer variant and the dispatch template are in
-  `pi-web-ui-internal-api-orchestration` (§3 and §3c).
+  [`pi-web-ui-internal-api-orchestration`](../pi-web-ui-internal-api-orchestration/SKILL.md)
+  (§3 and §3c).
 
 ## Choose the backstop for the failure you are covering
 
-Where the tool is actually loaded (**Pi**, or **Claude Code with the `watch-wake` mod**),
-prefer the model-free `wake_deadline` over any model child that merely sleeps:
+Where the tool is actually loaded (**Pi**, or **Claude Code with the watch-wake
+mod**), prefer the model-free `wake_deadline` over any model child that merely sleeps:
 
 ```json
 { "action":"arm", "delay_seconds":1500,
@@ -166,16 +169,18 @@ Read the returned id, deadline, status and `durable` flag. `status` is read-only
 replacement. Arm replaces the single local window. It has no model/API/process
 calls while waiting, but processing its wake is an ordinary model turn.
 
-The deadline has finite retries, visible persistence/restore errors, same-owner
+The deadline has finite retries, visible persistence/restore errors, same-session
 restart recovery and no inherited fork authority. Channel acceptance is not
 processing; a crash before accepted-state persistence may replay the wake. It
-never resumes a goal or decides whether a child succeeded.
+never resumes a goal or decides whether a child succeeded. The tool contract itself
+is in the watch-wake companion's
+[`README`](../../companions/watch-wake/README.md).
 
 **Server-side variant.** A watch condition `{"type":"deadline","afterSeconds":N}` on the
 same watch is a model-free timer inside the server: it survives restarts (overdue at
 boot fires `reconciled:true`) and works with `onFire`, so it is the backstop for a
 **managed** parent (no local tool needed) and an independent second clock for any
-watcher (`pi-web-ui-internal-api-orchestration/references/walk-away.md`).
+watcher ([`../pi-web-ui-internal-api-orchestration/references/walk-away.md`](../pi-web-ui-internal-api-orchestration/references/walk-away.md)).
 
 **Do not assume deployment.** If `wake_deadline` is absent, the loaded extension
 is old, or the failure under investigation is the host/extension itself, use the next
@@ -184,7 +189,7 @@ hot-reload a supervising parent (or redeploy a mod under one) just to obtain the
 timer mid-window.
 
 **`wake_deadline` has one slot per session.** Arming it replaces whatever it held — including
-a long-range scheduled check (e.g. a 12-hour production-verification deadline) or the
+a long-range scheduled check (such as a 12-hour verification deadline) or the
 current wave's backstop. When a scheduled check and per-window backstops coexist, give the
 slot to one of them and use rung 2 (a capped background sleep) for the other; record which
 is which in your checkpoint.
@@ -206,24 +211,27 @@ next window.
 
 | Rung | Mechanism | Cost while waiting | Use when |
 |---|---|---|---|
-| **1** | `wake_deadline` (Pi, Claude mod), or the server `deadline` watch condition (managed parent), or the native scheduling tool with `TimerCondition` (Antigravity) | no model/API/process calls | The tool is loaded and healthy. |
-| **2** | a bounded background shell sleep with a self-cancelling backstop (Pi `bg_run` with `backstop_s`; Claude Code capped `run_in_background` Bash sleep) | a plain process, no tokens | Rung 1 absent or suspect; also the natural form for command-shaped waits. |
-| **3** | Independent-process "dead-man" **subagent** (Pi only, last resort) | one model child launch + report | Only when rungs 1 and 2 are absent, unloaded, or themselves under suspicion. |
+| **1** | `wake_deadline` (Pi, Claude Code with the mod), or the server `deadline` watch condition (managed parent), or the native `schedule` tool with `TimerCondition` (Antigravity) | no model/API/process calls | The tool is loaded and healthy. |
+| **2** | A bounded background-shell sleep — the harness's background shell where it has one, otherwise `run_in_background` Bash (Claude Code) — plus whatever self-cancelling backstop the harness offers | a plain process, no tokens | Rung 1 absent or suspect; also the natural form for command-shaped waits. |
+| **3** | Independent-process "dead-man" **subagent** (last resort, where a subagent tool exists) | one model child launch + report | Only when rungs 1 and 2 are absent, unloaded, or themselves under suspicion. |
 
 **No rung resurrects a dead parent.** Every fallback needs a live parent delivery
 channel; process-death recovery needs an external supervisor or a manual checkpoint
 resume. A backstop bounds a missed wake; it does not promise delivery.
 
-Rung 2 on Pi:
+Rung 2, as a plain command:
 
 ```text
-bg_run: { command: "sleep 1500", label: "wait-window", backstop_s: 1800 }
+# a background-shell tool if your harness has one, otherwise Claude Code's
+# run_in_background Bash — the process exit is the wake
+sleep 1500
 ```
 
-`backstop_s` self-cancels when the task settles, so a lost completion wake still
+Pair any self-cancelling backstop your harness offers with must-not-miss
+completions: it cancels itself when the task settles, so a lost completion wake still
 surfaces. For the Claude Code loop template, see the Claude reference.
 
-### Rung 3: the dead-man subagent (Pi, last resort)
+### Rung 3: the dead-man subagent (last resort)
 
 A background subagent whose **entire job** is to sleep for a fixed period and report a
 sentinel. It bounds a failed primary watch while the parent delivery channel stays
@@ -269,13 +277,15 @@ child with an `onFire` action targeting you. Watch the child, wake the parent.
 
 Payload, fan-in rules, budgets, cooldowns, the two delivery traps and the evidence
 ladder are owned by **`pi-web-ui-internal-api-orchestration`**
-(`references/walk-away.md`); do not re-derive them here. This skill's job is the
-discipline around it: *what to do so that a failed onFire chain cannot strand you*.
+([`references/walk-away.md`](../pi-web-ui-internal-api-orchestration/references/walk-away.md));
+do not re-derive them here. This skill's job is the discipline around it: *what to do
+so that a failed onFire chain cannot strand you*.
 
-### 2. `watch-wake` (Pi extension, Claude Code mod): when you are a bare CLI
+### 2. `watch-wake` (the companion's Pi extension and Claude Code mod): when you are a bare CLI
 
 When the waiting agent is a **bare `pi` or `claude` CLI** the server cannot prompt,
-`onFire` cannot reach you directly. Two shapes (see your harness's watch-wake docs):
+`onFire` cannot reach you directly. Two shapes (the companion's
+[`README`](../../companions/watch-wake/README.md)):
 
 - Point `watch_wake_register` at the child directly (pure-observer watch, polls the
   durable ledger, steers a busy host or starts an idle host via follow-up).
@@ -286,17 +296,20 @@ When the waiting agent is a **bare `pi` or `claude` CLI** the server cannot prom
 
 ### 3. Background completion: the in-harness wake
 
-On Pi, a background subagent launch with `run_in_background: true` ends with its
+On Pi, a background `subagent` launch with `run_in_background: true` ends with its
 completion or timeout delivered as a follow-up user message that triggers a turn. On
 Claude Code, a background Bash task's exit does the same. **For command-shaped waits use
-the shell, not a model child:** on Pi, a background-shell tool runs test suites, builds
-and pure sleeps as a plain process with **no model child at all**, returns a task id
-instantly and wakes you with the exit code and output tail. Pair a self-cancelling
-backstop with must-not-miss completions. Reach for a background *subagent* only when the
-waiter itself needs model reasoning mid-wait.
+the shell, not a model child:** a background-shell tool if your harness has one,
+otherwise the harness's background execution (for Claude Code `run_in_background` Bash),
+runs test suites, builds and pure sleeps as a plain process with **no model child at
+all**, returns a task id instantly and wakes you with the exit code and output tail. Pair
+a self-cancelling backstop with must-not-miss completions. Reach for a background
+*subagent* only when the waiter itself needs model reasoning mid-wait.
 
 **`pi-orch` and waiting** (verbs and exit codes in
-`pi-web-ui-internal-api-orchestration/references/pi-orch.md`). One pattern per dispatch:
+[`../pi-web-ui-internal-api-orchestration/references/pi-orch.md`](../pi-web-ui-internal-api-orchestration/references/pi-orch.md)).
+`pi-orch` is on your `PATH`; it is the bin of the
+[pi-orch repository](https://github.com/valtterimelkko/pi-orch). One pattern per dispatch:
 
 - **Idle (default for an interactive parent):** register the wake with the `watch-wake` tool plus
   `wake_deadline` and **end your turn**. Never hold a foreground `pi-orch wait`: one child blocked a
@@ -328,7 +341,7 @@ waits that matter:
 
 | Situation | Strategy |
 |---|---|
-| Internal API orchestration (Pi CLI/SDK) | Local `watch_wake_register` **+ model-free backstop: `wake_deadline`, or a background sleep with `backstop_s`** (dead-man subagent only as rung 3) |
+| Internal API orchestration (Pi) | Local `watch_wake_register` **+ model-free backstop: `wake_deadline`, or a bounded background-shell sleep** (dead-man subagent only as rung 3) |
 | Internal API orchestration (Claude Code CLI) | `watch-wake` mod: `watch_wake_register` **+ `wake_deadline` backstop**, then end the turn (fallback: exiting background watcher + capped loop) |
 | Internal API orchestration (Antigravity CLI/IDE) | Exiting background watcher (`wait-watch.sh` via `run_command`) **+ native schedule backstop (`TimerCondition`)** |
 | Internal API orchestration (Managed session, any runtime) | Server-side `onFire` watch **+ a `deadline` condition on the same watch** |
@@ -337,12 +350,13 @@ waits that matter:
 | Long wait without Internal API | Local deadline / schedule or independent process completion/backstop, chosen for the host and failure domain |
 
 Why the backstop earns its keep: primary wake chains have real, observed
-failure modes — `maxWakeups` budget burned by a busy parent, `cooldownSeconds`
+failure modes — a `maxWakeups` budget burned by a busy parent, `cooldownSeconds`
 suppressing a second firing, a relay wake that never surfaces in the CLI, a
-server restart reloading watches `detached`. None of these are exotic; all of
-them can strand a healthy parent. A verified backstop bounds that missed-watch
-window; it does not promise recovery from parent death or an unavailable delivery
-channel.
+hand-built watch whose condition `type` is wrong (an unknown type used to register
+silently and never fire; current servers refuse it with a 400). None of these are
+exotic; all of them can strand a healthy parent. A verified backstop bounds that
+missed-watch window; it does not promise recovery from parent death or an unavailable
+delivery channel.
 
 ## On-wake checklist
 
@@ -352,11 +366,16 @@ channel.
    changed). Both mean "go look", not "work is done".
 2. Reconcile every outstanding work item against durable evidence (receipts,
    checkpoint files, watch `wakeAttempts[]`) — not from the wake message text. A Claude Code
-   parent finds its children by owner id: `pi-orch status --owner <id>` (best-effort, from the
-   per-host spawn ledger; children of other clients never appear). A
+   parent finds its children from the per-host spawn ledger: `pi-orch status` filtered
+   by the parent's `ownerId` (best effort; children of other clients never appear). A
    coalesced "N wakes arrived together" is one reconcile-all wake. A wake **held while
    you were busy** may describe an event you already handled: compare the run receipt's
    times with your checkpoint, and if nothing is new, go idle again.
+   **Check the server itself too:** if the server's process identity (`MainPID` for its
+   service unit) differs from your checkpoint and you did not restart it, it died (OOM
+   kill, crash) rather than drained. An unplanned death fires no interruption event on
+   your watches, so the children's lost turns are silent: reconcile every child as after
+   a restart.
 3. If everything is terminal: proceed (collect, synthesise, report).
 4. If dependent work is still running: preserve or re-arm the appropriate
    backstop for that window, repair only an owned broken primary, and go idle.
@@ -364,9 +383,19 @@ channel.
 5. If the wait blew past expectation with no progress evidence: escalate to
    the operator instead of re-arming indefinitely.
 
+### Canonical watch blocks
+
+Never hand-write watch JSON; copy the block for the child kind.
+
+- **Plain turn child:** `{"id":"done","type":"event_type","eventType":"agent_end"}`.
+- **Goal child:** `{"id":"outcome","type":"event_type","eventType":"goal_end","dataMatch":{"objective":"<exact objective>"},"once":false}` plus `{"id":"paused","type":"event_type","eventType":"goal_state","dataMatch":{"objective":"<exact objective>","status":"paused"},"once":false}`; `max_wakes` ~10. `<exact objective>` is the **stored** string (with `pi-orch`, the raw objective plus its completion pointer): prefer `pi-orch watch register --objective`, which registers both forms.
+- **Reviewer:** `{"id":"done","type":"event_type","eventType":"agent_end","once":false}`, `max_wakes` ~4.
+
+**On-wake triage:** a `goal_end` from a receipt that never started; an early `agent_end` from the child's background shell; a goal the child paused itself; a steer to an idle child that was dropped. Check the receipt and `busy` before acting.
+
 ### Wake budgets and compaction
 
-Observed on long-running children (and reviewers, which run long):
+Observed on long-running children (and on reviewers, which run long):
 
 - **An empty first end is not a failure.** An aborted turn with no text at about 75 %
   context is an `auto-compact-75` abort; the session **resumes by itself**. Read the run
@@ -472,7 +501,8 @@ Two more discriminations the table implies:
   on a legitimate path, not handing back. Check for its running background job before
   treating the end as a hand-back or a stall. `orchestrated-child-worker` now tells children not to
   do this, and to start any early stop with `NOT FINISHED:`; treat such a message as
-  progress, not a hand-back. (22% of audited child sessions ended a turn this way.)
+  progress, not a hand-back. (In the historical audit, 22% of child sessions ended a turn
+  this way.)
 - **Pre-commit the stall response before you idle.** Write into your checkpoint what you
   will do and when: "if no further turn by 21:25 while its soak has finished, prompt it
   to finish (`follow_up`)"; "if the reviewer compacts again without its file, replace it
@@ -481,8 +511,8 @@ Two more discriminations the table implies:
 
 The independent-signal selection table, the Internal API evidence calls, and
 the two practical rules (consecutive observations; verify your own parsing)
-are in `references/supervision-and-stuck-detectors.md` — read it before you
-build any detector.
+are in [`references/supervision-and-stuck-detectors.md`](references/supervision-and-stuck-detectors.md) —
+read it before you build any detector.
 
 ### Before building any of this, check whether the platform already evaluates it
 
@@ -497,7 +527,8 @@ me". Those are different claims. Delivery and evaluation are separable: even
 when nothing can push a wake into your process, you can usually **register an
 observer and read it yourself**, then supply only the delivery your harness
 needs — which for Claude Code is the `watch-wake` mod, or the exiting
-background watcher where mods are unavailable (`references/claude-code-watch-wake-and-background-watcher.md`).
+background watcher where mods are unavailable
+([`references/claude-code-watch-wake-and-background-watcher.md`](references/claude-code-watch-wake-and-background-watcher.md)).
 
 Concretely, on the Pi Web UI Internal API: a bare Claude CLI cannot be an
 `onFire` target, but it can register a watch with **no** `onFire` (a pure observer: the
@@ -527,10 +558,18 @@ resumed. Tell the child all of this explicitly: a child that has not been told
 will hold its turn open waiting for you or end it silently, and both strand
 the run.
 
+If you also watch the child's text for a question sentinel, make it a line the child
+emits last and match it with an end-anchored regex
+(`(^|\n)PARENT-QUESTION: [0-9]{2}-[A-Za-z0-9_.-]+\.md\s*$`). A plain substring match
+can fire on the child's own thinking, quoting the brief. Give every goal watch,
+including one for a correction round, a paused `goal_state` condition as well as
+`goal_end`, and remember that clearing a child's goal yourself fires those conditions
+too.
+
 **Mandate the child skill** (*the child contract*, above): the brief tells the
-child to follow `orchestrated-child-worker`, which makes it announce its task and owned
-paths in the coordination directory at boot, leave a closing note, and end its turn to
-hand back.
+child to follow `orchestrated-child-worker`, which makes it work in its isolated
+worktree, announce its task and owned paths in the coordination directory, leave a
+closing note, and end its turn to hand back.
 
 **But do not make the hand-back file your completion signal.** It is an
 artefact the child writes *by choice* — the exact category the liveness rule
@@ -540,7 +579,7 @@ missing file is the whole event. Watch completion on a signal the child cannot
 withhold: a commit landing, the run going terminal, the platform's own
 end-of-turn condition. The full protocol, the measured failure shape and the
 observed incident behind this rule are in
-`references/supervision-and-stuck-detectors.md`.
+[`references/supervision-and-stuck-detectors.md`](references/supervision-and-stuck-detectors.md).
 
 ### Calibrate what the child may ask about
 
@@ -561,10 +600,11 @@ engineering judgement.
 ### Adopted children are supervision targets too
 
 A child linked into the tree **after the fact** (Internal API adoption, contract 1.40.0 —
-`pi-web-ui-internal-api-orchestration` §8 and `references/adoption.md`) is supervised like
-any other child: watch the child, wake the parent, backstop the window. Adoption's own
-gate still applies first: if the session was used in a CLI tool, the operator must confirm
-they have exited it before you adopt or dispatch into it.
+[`pi-web-ui-internal-api-orchestration`](../pi-web-ui-internal-api-orchestration/SKILL.md) §8
+and [`references/adoption.md`](../pi-web-ui-internal-api-orchestration/references/adoption.md))
+is supervised like any other child: watch the child, wake the parent, backstop the
+window. Adoption's own gate still applies first: if the session was used in a CLI tool,
+the operator must confirm they have exited it before you adopt or dispatch into it.
 
 ### Goal-driven children and goal-carrying parents
 
@@ -574,7 +614,7 @@ terminal `goal_end` plus a state-filtered question/pause, **not** per-run
 one-shot watcher can be consumed too early by an old goal's clear event.
 A **goal-carrying Pi parent** must park cleanly before idling: `goal` pause
 with reason `"supervising <child>"` — never via the question exit
-(a needs-user-input marker), which sets `pendingQuestion` so the wake itself
+(`Status: NEEDS_USER_INPUT`), which sets `pendingQuestion` so the wake itself
 auto-resumes the goal — and resume only when fully settled. Budgets are real
 outcomes (exhausted auto-continue or turn budget ends as
 `goal_end {failed, budget}` — re-plan, don't poll through). Set the goal's token budget
@@ -582,46 +622,57 @@ explicitly for a child that may run long (the 5,000,000 default pauses it mid-ru
 `pi-orch spawn --goal-budget-tokens`), and keep the goal objective to one line.
 
 Two goal-child edges observed in practice (detail in
-`pi-web-ui-internal-api-orchestration/references/goals.md`):
+[`../pi-web-ui-internal-api-orchestration/references/goals.md`](../pi-web-ui-internal-api-orchestration/references/goals.md)):
 
 - **A `failed` goal_end can be premature.** The Pi goal engine failed a goal
   ("run ended in under 15000ms") while the child kept working, and its later
   completion produced no second `goal_end`. On such a wake, read `busy`, commits and
   the hand-back file. Let the window's backstop catch a quiet finish.
 - **A deploy is a goal-child event.** On contract ≥ 1.60.0 a Pi goal child cut off by a
-  restart continues ONCE on its own at boot: you are woken by its progress
+  service restart continues ONCE on its own at boot: you are woken by its progress
   (`goal_state` + top-level `autoContinued`), not by a false end, and only a stop the
   server could NOT continue arrives as `goal_state` `paused` + `pausedReason:
   "interrupted"` — resume (`POST /goal {"action":"resume"}`) or re-dispatch that one.
-  Provider-aborted goals are NOT continued: they end as before wave K (a failed
-  `goal_end`). Every non-Pi goal, and every server older than 1.60.0, still needs the old
-  move: a cut-off child fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0),
-  and on older servers it dies silently, so pause goal children before such a restart;
-  resume or re-dispatch after reconciling.
+  Provider-aborted goals are NOT continued: they end as a failed `goal_end`. Every
+  non-Pi goal, and every server older than 1.60.0, still needs the old move: a cut-off
+  child fires its goal watch with `interruptedByRestart` (contract ≥ 1.52.0), and on
+  older servers it dies silently, so pause goal children before such a restart; resume
+  or re-dispatch after reconciling.
 
 The full design consequences, per-runtime pause semantics and the observed
-failure shapes are in `references/supervision-and-stuck-detectors.md`
+failure shapes are in
+[`references/supervision-and-stuck-detectors.md`](references/supervision-and-stuck-detectors.md)
 (goal cases).
 
 ## Related
 
-- **`pi-web-ui-internal-api-orchestration`** — owns the Internal API side:
-  watch/onFire mechanics, fan-in, retention, evidence. Read it before your
-  first detached dispatch; use this skill for the idle-safety discipline on
-  top.
-- **`orchestrated-child-worker`** — the skill every dispatched child is told to follow.
-- **`secret-scanning`** — scan artefacts and repositories for credentials before
-  publishing them.
-- Your harness's watch-wake extension/mod docs — the bare-CLI wake primitives
-  (`watch_wake_register/list/cancel`, `wake_deadline`), baselining, lifecycle edges.
-- Your harness's background-task docs — background task launch, wake delivery,
-  `task_list/output/stop`, the timeout ceiling.
-- Origin: the pre-idle checklist and mandatory re-arm rule come from a live
-  post-mortem (an un-backstopped 3.5 h stall).
+- **[`pi-web-ui-internal-api-orchestration`](../pi-web-ui-internal-api-orchestration/SKILL.md)**
+  — owns the Internal API side: watch/onFire mechanics, fan-in, retention, evidence.
+  Read it before your first detached dispatch; use this skill for the idle-safety
+  discipline on top.
+- **[`orchestrated-child-worker`](../orchestrated-child-worker/SKILL.md)** — the skill
+  every dispatched child is told to follow.
+- **[`secret-scanning`](../secret-scanning/SKILL.md)** — scan artefacts and repositories
+  for credentials before publishing them.
+- **[`../../companions/watch-wake/README.md`](../../companions/watch-wake/README.md)** —
+  the watch-wake companion: `watch_wake_register/list/cancel`, `wake_deadline`, and the
+  per-harness mods, with baselining and lifecycle edges.
+- Your harness's own background-execution docs — background task launch, wake delivery,
+  task listing and cancellation, and the timeout ceiling.
+- Origin: the pre-idle checklist and mandatory re-arm rule come from a live post-mortem
+  (an un-backstopped 3.5 h stall).
 - Origin: the supervision section comes from live incidents where orchestrators used
   status files the child wrote by choice as liveness proxies, causing false positives
   while children were actively running tool calls. Independent platform signals prevent
   this.
 
-The reference tiers and their mandatory/situational split are described in
-**What to read, in three tiers** at the top of this file.
+The reference split and its mandatory/situational rule are described in
+**What to read** at the top of this file.
+
+## Part of the Pi Web UI orchestration set
+
+- **Pi Web UI** — https://github.com/valtterimelkko/pi-web-ui (docs:
+  `docs/ORCHESTRATION-OVERVIEW.md`, `docs/INTERNAL-API-ORCHESTRATION.md`).
+- **pi-orch** — https://github.com/valtterimelkko/pi-orch.
+- **The pack** — [`../../packs/pi-web-ui-orchestration-pack/README.md`](../../packs/pi-web-ui-orchestration-pack/README.md).
+- **The watch-wake companion** — [`../../companions/watch-wake/`](../../companions/watch-wake/).
