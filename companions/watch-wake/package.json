@@ -1,0 +1,9 @@
+{
+  "name": "watch-wake-companions",
+  "private": true,
+  "type": "module",
+  "description": "Standalone publish of the watch-wake companion (Pi extension and Claude Code mod). Not a package to install; the code is copied into a harness.",
+  "scripts": {
+    "test": "node --test pi/tests/*.test.mjs claude-code/tests/*.test.mjs"
+  }
+}
